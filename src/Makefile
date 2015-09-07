@@ -1,7 +1,7 @@
 STD=-std=c99 -pedantic
 WARN=-Wall -W
 OPT=-O2
-INCLUDES=-I./cli/include -I./srv/include -I./transport/include
+INCLUDES=-I./cli/include -I./srv/include -I./transport/include -I.
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(INCLUDES)
 
