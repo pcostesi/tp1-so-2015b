@@ -36,5 +36,5 @@ clean:
 
 all: $(CLI) $(SRV)
 
-.PHONY=clean all
+.PHONY: clean all
 
