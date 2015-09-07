@@ -23,10 +23,10 @@ LDINC=-L. -lcomm
 	$(CC) $(FINAL_CFLAGS) -c $< -o $@
 
 $(CLI):	$(COMM) $(CLIOBJ)
-	$(CC) $(LDFLAGS) $(LDINC) -o $@ $^
+	$(CC) $(LDFLAGS) $(LDINC) -o $@ $(CLIOBJ)
 
 $(SRV): $(COMM) $(SRVOBJ)
-	$(CC) $(LDFLAGS) $(LDINC) -o $@ $
+	$(CC) $(LDFLAGS) $(LDINC) -o $@ $(SRVOBJ)
 
 $(COMM): $(COMMOBJ)
 	$(AR) rcs $@ $(COMMOBJ)
