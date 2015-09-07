@@ -30,3 +30,13 @@
 
 # Debug files
 *.dSYM/
+
+# Binaries
+client
+server
+
+# Other things OSX adds
+.DS_Store/
+
+# Vim files
+*.swp
