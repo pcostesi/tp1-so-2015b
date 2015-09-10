@@ -65,5 +65,5 @@ clean:
 run:	$(CLI) $(SRV) $(ATC)
 	valgrind $< > $<.log &
 
-.PHONY: clean all
+.PHONY: clean
 
