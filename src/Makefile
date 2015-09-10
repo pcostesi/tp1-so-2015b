@@ -43,7 +43,7 @@ $(CLI):	$(CLI_BIN)
 
 $(CLI_BIN):	$(COMM) $(CLIOBJ) $(ATCCOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDAFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^
 
 $(SRV): $(SRV_BIN)
 
