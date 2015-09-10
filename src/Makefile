@@ -1,5 +1,5 @@
 STD=-std=c99 -pedantic
-WARN=-Wall -g
+WARN=-Wall -g -Werror
 OPT=-O2
 INCLUDES=-I./cli/include -I./srv/include -I./transport/include \
 	 -I./atcc/include -I./atcd/include
@@ -67,4 +67,3 @@ run:	$(CLI) $(SRV) $(ATC)
 
 .PHONY: clean all
 
-.DEFAULT: all
