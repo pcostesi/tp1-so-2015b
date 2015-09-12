@@ -9,7 +9,7 @@ enum atc_elevation { UP_1 = 10, UP_2 = 20, UP_3 = 30, STRAIGTH = 0, DOWN_1 = -10
 
 
 struct atc_plane { 
-    char id[5];
+    char id[6];
     int x;
     int y;
     int z;
@@ -25,6 +25,8 @@ struct atc_airport{
 	int y;
 	char id[3];
 };
+
+enum atc_commands{speed_up, speed_down, climb, descend, turn_rigth, turn_left};
 
 int atcd_test(void);
 
@@ -51,6 +53,9 @@ e*s*diff + z
 void calculate_position(atc_plane* plane, time_t new_time){
 	time_t dif_time = new_time - plane->time;
 	plane->x = 
+
+
+	
 }
 
 */
