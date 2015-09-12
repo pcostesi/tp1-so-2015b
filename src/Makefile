@@ -2,9 +2,14 @@ STD=-std=c99 -pedantic
 WARN=-Wall -g -Werror
 OPT=-O2
 INCLUDES=-I./cli/include -I./srv/include -I./transport/include \
-	 -I./atcc/include -I./atcd/include
+	 -I./atcc/include -I./atcd/include -I./
+
 BKND?=socket
-I_BKND=-I./transport/$(BKND)/include
+I_BKND=-I./transport/socket/include \
+       -I./transport/fifo/include \
+       -I./transport/shmem/include \
+       -I./transport/queue/include \
+       -I./transport/files/include
 
 BIN=../bin
 
