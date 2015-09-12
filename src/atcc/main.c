@@ -1,8 +1,8 @@
-#include "comm.h"
 #include <stdio.h>
+#include "atcd.h"
 
 int main(int argc, char ** argv)
 {
-    printf("hello! %d\n", comm_test());
+    printf("hello! %d\n", atcd_test());
     return 0;
 }

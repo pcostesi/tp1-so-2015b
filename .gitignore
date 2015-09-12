@@ -32,8 +32,7 @@
 *.dSYM/
 
 # Binaries
-client
-server
+bin/
 
 # Other things OSX adds
 .DS_Store/
