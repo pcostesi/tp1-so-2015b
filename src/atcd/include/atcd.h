@@ -3,7 +3,12 @@
 
 #include <time.h>
 
-enum atc_heading { SW, W, NW, N, NE, E, SE, S };
+#define LANDING_TOLERANCE 200
+#define MAX_LEN 40
+#define MAX_HEIGHT 20
+#define MAX_AIRPORTS 2
+
+enum atc_heading { SW=225, W=180, NW=135, N=90, NE=45, E=0, SE=315, S=270 };
 enum atc_status{landed, crashed, flying};
 enum atc_elevation { UP_1 = 10, UP_2 = 20, UP_3 = 30, STRAIGTH = 0, DOWN_1 = -10, DOWN_2 = -20, DOWN_3 = -30 };
 
@@ -26,6 +31,9 @@ struct atc_airport{
 	char id[3];
 };
 
+
+void calculate_position(struct atc_plane* , time_t);
+
 enum atc_commands{speed_up, speed_down, climb, descend, turn_rigth, turn_left};
 
 int atcd_test(void);
@@ -39,26 +47,6 @@ time_t get_time();
 void blip();
 
 int get_airports(struct atc_airport ports[]);
-
-
-/*
-Position calculation
-
-Tc-Ts = Diff
-
-h*s*diff + (x|y)
-e*s*diff + z
-
-
-void calculate_position(atc_plane* plane, time_t new_time){
-	time_t dif_time = new_time - plane->time;
-	plane->x = 
-
-
-	
-}
-
-*/
 
 
 
