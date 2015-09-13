@@ -2,6 +2,7 @@
 #define __STO_H 1
 
 #include <fcntl.h>
+#include <stddef.h>
 
 #define STO_MAX_NAME_LENGTH 64
 #define STO_KEY_SIZE 16

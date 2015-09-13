@@ -4,6 +4,7 @@
 #include <time.h>
 #include <math.h>
 #include <time.h>
+#include <storage.h>
 
 #define LANDING_TOLERANCE 200
 #define MAX_LEN 40
@@ -57,6 +58,9 @@ int get_airports(struct atc_airport ports[]);
 
 time_t get_time();
 
+int set(enum atc_commands cmd, struct atc_plane plane);
+
+int get_airplanes();
 
 
 

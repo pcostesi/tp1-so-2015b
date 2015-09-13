@@ -8,8 +8,7 @@ int atcd_test(void)
     return 5;
 }
 
-
-//TODO int GET_AIRPLANES(BUFFER)
+//Static Headers
 
 static void _set_plane_x_y(struct atc_plane *plane, int time_dif);
 static void _crashed_or_landed(struct atc_plane *plane);
@@ -19,6 +18,9 @@ static float _cos(int angle);
 static void _create_plane();
 static int _rand_number();
 static int _rand_capital_letter();
+
+static struct sto_database sto_db;
+
 
 
 void calculate_position(struct atc_plane* plane, time_t new_time)
@@ -34,10 +36,6 @@ void calculate_position(struct atc_plane* plane, time_t new_time)
 		plane->z = aux;
 		_set_plane_x_y(plane, time_dif);
 	}
-
-	//TODO CHECK TIME FORMAT, NEED INT
-
-	
 }
 
 static void _set_plane_x_y(struct atc_plane *plane, int time_dif)
@@ -65,7 +63,7 @@ static void _crashed_or_landed(struct atc_plane *plane)
 	}
 }
 
-//Return 1 if the plane is IN DA ZONE!!
+//Return 0 if the plane is IN DA ZONE!!
 static int _in_da_zone(struct atc_plane *plane)
 {
 	struct atc_airport airports[MAX_AIRPORTS];
@@ -73,10 +71,10 @@ static int _in_da_zone(struct atc_plane *plane)
 	for(int i =0; i < a_count; i++){
 		if(plane->x > (airports[i].x - LANDING_TOLERANCE) && plane->x < (airports[i].x + LANDING_TOLERANCE) && 
 			plane->y > (airports[i].y - LANDING_TOLERANCE) && plane->y < (airports[i].y + LANDING_TOLERANCE)){
-			return 1;
+			return 0;
 		} 
 	}
-	return 0;
+	return -1;
 }
 
 static int _sin(int angle)
@@ -139,13 +137,15 @@ static void _create_plane()
 
 	memcpy(new_plane.id, id, 6);
 	new_plane.x = rand()%MAX_LEN;
-	new_plane.y = rand()%MAX_HEIGHT;
-	new_plane.z	= rand()%9000 + 1000;
+	new_plane.y = rand()%MAX_HEIGHT; 
+	new_plane.z	= rand()%9000 + 1000; 
 	new_plane.time = time(NULL);
 	new_plane.heading = (enum atc_heading)((rand() % 7) * 45);	
-	new_plane.elevation	= (enum atc_elevation)((rand()%7 -6)*10);
+	new_plane.elevation	= (enum atc_elevation)( (rand()%7-6) *10);
 	new_plane.speed	= rand()%700 + 200;
 	new_plane.status = flying;
+
+	sto_set(sto_db, new_plane, new_plane.id);
 }
 
 
@@ -166,50 +166,57 @@ time_t get_time()
 	return time(NULL);
 }
 
-void set(enum atc_commands cmd, struct atc_plane plane)
+//Return 0 if command was applied/succesfull, -1 if it was not a valid commando or not possible to apply
+int set(enum atc_commands cmd, struct atc_plane plane)
 {
 	switch (cmd){
-		case speed_up : if(plane.speed >= 1000) { /*send client error*/}
+		case speed_up : if(plane.speed >= 1000) { 
+							return -1;
+						}
 						else{
 							plane.speed += 50;
-							//update data base
-							//send akn
+							return sto_set(sto_db, plane, plane.id);
 						}
-			break;
-		case speed_down : if( plane.speed <= 150) { /*send client error*/}
+					break;
+		case speed_down : if( plane.speed <= 150) { 
+							return -1;
+						}
 						else{
 							plane.speed -= 50;
-							//update data base
-							//send akn
+							return sto_set(sto_db, plane, plane.id);
 						}
-			break;
-		case climb : if( plane.elevation >= 30) { /*send client error*/}
+					break;
+		case climb : if( plane.elevation >= 30) { 
+							return -1;
+						}
 						else{
 							plane.elevation = plane.elevation + 10;
-							//update data base
-							//send akn
+							return sto_set(sto_db, plane, plane.id);
 						}
-			break;
-		case descend : if( plane.elevation <= -30) { /*send client error*/}
+					break;
+		case descend : if( plane.elevation <= -30) { 
+							return -1;
+						}
 						else{
 						 	plane.elevation = plane.elevation - 10;
-						 	//update data base
-							//send akn
+							return sto_set(sto_db, plane, plane.id);
 						}
-			break;
+					break;
 		case turn_rigth : 	plane.heading = (plane.heading -45);
-							//update data base
-							//send akn						
-			break;
+							return sto_set(sto_db, plane, plane.id);
+					break;
 		case turn_left : 	plane.heading = (plane.heading +45);
-							//update data base
-							//send akn	
-			break;
-		default : /*send error here */ ;
+							return sto_set(sto_db, plane, plane.id);
+					break;
+		default : return 0;
 	}
+	return 0;
 }
 
 
-
+int get_airplanes()
+{
+	return 0;
+}
 
 
