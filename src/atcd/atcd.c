@@ -1,4 +1,7 @@
 #include "atcd.h"
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
 int atcd_test(void)
 {
@@ -13,6 +16,9 @@ static void _crashed_or_landed(struct atc_plane *plane);
 static int _in_da_zone(struct atc_plane *plane);
 static int _sin(int angle);
 static float _cos(int angle);
+static void _create_plane();
+static int _rand_number();
+static int _rand_capital_letter();
 
 
 void calculate_position(struct atc_plane* plane, time_t new_time)
@@ -112,5 +118,98 @@ static float _cos(int angle)
 
 int get_airports(struct atc_airport buff[])
 {
-	return 0;
+	struct atc_airport aux = {10, 10};
+	struct atc_airport aux2 = {20, 20};
+	buff[0] = aux;
+	buff[1] = aux2;
+	return 2;
 }
+
+static void _create_plane()
+{
+	srand(time(NULL));
+	struct atc_plane new_plane;
+	char id[6];
+	id[0] = _rand_capital_letter();
+	id[1] = _rand_capital_letter();
+	id[2] = _rand_number();
+	id[3] = _rand_number();
+	id[4] = _rand_number();
+	id[5] = _rand_capital_letter();
+
+	memcpy(new_plane.id, id, 6);
+	new_plane.x = rand()%MAX_LEN;
+	new_plane.y = rand()%MAX_HEIGHT;
+	new_plane.z	= rand()%9000 + 1000;
+	new_plane.time = time(NULL);
+	new_plane.heading = (enum atc_heading)((rand() % 7) * 45);	
+	new_plane.elevation	= (enum atc_elevation)((rand()%7 -6)*10);
+	new_plane.speed	= rand()%700 + 200;
+	new_plane.status = flying;
+}
+
+
+static int _rand_capital_letter()
+{
+	return (rand() % 26) +65;
+}
+
+
+static int _rand_number()
+{
+	return (rand() % 10) +48;
+}
+
+
+time_t get_time()
+{
+	return time(NULL);
+}
+
+void set(enum atc_commands cmd, struct atc_plane plane)
+{
+	switch (cmd){
+		case speed_up : if(plane.speed >= 1000) { /*send client error*/}
+						else{
+							plane.speed += 50;
+							//update data base
+							//send akn
+						}
+			break;
+		case speed_down : if( plane.speed <= 150) { /*send client error*/}
+						else{
+							plane.speed -= 50;
+							//update data base
+							//send akn
+						}
+			break;
+		case climb : if( plane.elevation >= 30) { /*send client error*/}
+						else{
+							plane.elevation = plane.elevation + 10;
+							//update data base
+							//send akn
+						}
+			break;
+		case descend : if( plane.elevation <= -30) { /*send client error*/}
+						else{
+						 	plane.elevation = plane.elevation - 10;
+						 	//update data base
+							//send akn
+						}
+			break;
+		case turn_rigth : 	plane.heading = (plane.heading -45);
+							//update data base
+							//send akn						
+			break;
+		case turn_left : 	plane.heading = (plane.heading +45);
+							//update data base
+							//send akn	
+			break;
+		default : /*send error here */ ;
+	}
+}
+
+
+
+
+
