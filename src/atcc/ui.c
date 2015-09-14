@@ -10,26 +10,25 @@ static int cur_line;
 
 void ui_test(){
 	init();
-	draw();
-	sleep(1);
-	print_cmd("HOLA,");
-	sleep(1);
-	print_cmd("SOBAME");
-	sleep(1);
-	print_cmd("LA");
-	sleep(1);
-	print_cmd("QUENA");
-	sleep(1);
-	print_cmd("PUTITA");
-	sleep(5);
+	while(1){
+		draw();
+		cmd_scan();
+		
+	}
 	dispose();
+}
+
+
+void cmd_scan(){
+	char scan_cmd[32];
+	wscanw(cmd, "%s", &scan_cmd);
+	print_cmd(scan_cmd);
+	wclear(cmd);
 }
 
 void init(){
 	initscr();
 	init_brd();
-	cbreak();
-	noecho();
 
 	map = newwin(MAP_HEIGHT, MAP_WIDTH, 1, 1);
 	plane_list = newwin(MAP_HEIGHT, LIST_WIDTH, 1, MAP_WIDTH+BORDER+1);
@@ -109,6 +108,8 @@ void draw(){
 }
 
 void print_cmd(char *str){
+	wmove(cmd_log, cur_line, 0);
+	wclrtoeol(cmd_log);
 	mvwprintw(cmd_log, cur_line++, 0, str);
 	cur_line %= LOG_HEIGHT;
 	wrefresh(cmd_log);

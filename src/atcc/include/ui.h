@@ -18,6 +18,7 @@ void draw();
 void dispose();
 void print_cmd(char *str);
 void ui_test();	
+void cmd_scan();
 
 #endif
 
