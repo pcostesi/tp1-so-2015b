@@ -58,6 +58,8 @@ static void _set_plane_x_y(struct atc_plane *plane, int time_dif)
 
 }
 
+//Checkes if the plane was in a landing zone & satisfied landing conditions when it was at z = 0
+//Landing conditions ar esped <= 200km/h & inclination -10
 static void _crashed_or_landed(struct atc_plane *plane)
 {
 	if(plane->elevation != -10 || plane->speed > 56 || !_in_da_zone(plane) ){
@@ -70,6 +72,7 @@ static void _crashed_or_landed(struct atc_plane *plane)
 }
 
 //Return 0 if the plane is IN DA ZONE!!
+//Meaning if it was within LANDING_TOLERANCE of an airport when it reached z=0
 static int _in_da_zone(struct atc_plane *plane)
 {
 	struct atc_airport airports[MAX_AIRPORTS];
@@ -83,6 +86,7 @@ static int _in_da_zone(struct atc_plane *plane)
 	return -1;
 }
 
+//hardcoded sin(x) values to avoid unnecesary calculation
 static int _sin(int angle)
 {
 	switch(angle){
@@ -98,6 +102,7 @@ static int _sin(int angle)
 	}
 }
 
+//hardcoded cos(x) values to avoid unnecesary calculation
 static float _cos(int angle)
 {
 	switch(angle){
@@ -129,6 +134,9 @@ int get_airports(struct atc_airport buff[])
 	return 2;
 }
 
+//Creates a random plane, does not check if it already exist, because if it does.....it happens
+//Also, chance of having 2 planes with an equal name is: 0.00000284478 which means that one out of every 351520 new planes will 
+//have an already exisitng name plane, therefore we will not consider this case as to avoid acceses to the database.
 static void _create_plane()
 {
 	if(_planes_count == MAX_PLANES){
@@ -157,7 +165,7 @@ static void _create_plane()
 	sto_set(&sto_db, &new_plane, new_plane.id);
 }
 
-
+//auxiliar function
 static int _rand_capital_letter()
 {
 	return (rand() % 26) +65;
@@ -174,6 +182,7 @@ time_t get_time()
 {
 	return time(NULL);
 }
+
 
 //Return 0 if command was applied/succesfull, -1 if it was not a valid commando or not possible to apply
 int set(enum atc_commands cmd, struct atc_plane plane)
@@ -223,6 +232,8 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 }
 
 
+//Returns the amount of planes flying currently, which are loaded into the received plane buffer. Also, updates the storage
+//when it detects that a plane has colided or landed
 int get_airplanes(struct atc_plane buffer[])
 {
 	time_t current_time = get_time();
@@ -247,6 +258,8 @@ int get_airplanes(struct atc_plane buffer[])
 	return count;
 }
 
+
+//Auxiliary function to start a query
 static int _flying_planes(struct atc_plane plane, char name[6])
 {
 	return plane.status == flying;

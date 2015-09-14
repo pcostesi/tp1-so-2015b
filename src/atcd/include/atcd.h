@@ -23,13 +23,13 @@ enum atc_commands{speed_up, speed_down, climb, descend, turn_rigth, turn_left};
 
 struct atc_plane { 
     char id[6];
-    int x; //expressed
-    int y;
-    int z;
-    time_t time;
-    enum atc_heading heading;
-    enum atc_elevation elevation;
-    char speed;
+    int x; //expressed in mts
+    int y; //expressed in mts
+    int z;//expressed in mts
+    time_t time; 
+    enum atc_heading heading; //expressed in cardinal points
+    enum atc_elevation elevation; //expressed in elevation angle
+    char speed; //expressed in m/s
     enum atc_status status;
 };
 
