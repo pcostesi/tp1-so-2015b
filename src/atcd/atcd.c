@@ -18,6 +18,7 @@ static float _cos(int angle);
 static void _create_plane();
 static int _rand_number();
 static int _rand_capital_letter();
+static int _flying_planes(struct atc_plane plane, char name[6]);
 
 static struct sto_database sto_db;
 static int _planes_count = 0;
@@ -153,7 +154,7 @@ static void _create_plane()
 	new_plane.speed	= rand()%195 + 55;
 	new_plane.status = flying;
 
-	sto_set(sto_db, new_plane, new_plane.id)
+	sto_set(&sto_db, &new_plane, new_plane.id);
 }
 
 
@@ -183,7 +184,7 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 						}
 						else{
 							plane.speed += 14;
-							return sto_set(sto_db, plane, plane.id);
+							return sto_set(&sto_db, &plane, plane.id);
 						}
 					break;
 		case speed_down : if( plane.speed <= 42) {  //minimum plane speed 150km/h expressed in m/s
@@ -191,7 +192,7 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 						}
 						else{
 							plane.speed -= 14;
-							return sto_set(sto_db, plane, plane.id);
+							return sto_set(&sto_db, &plane, plane.id);
 						}
 					break;
 		case climb : if( plane.elevation >= 30) { 
@@ -199,7 +200,7 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 						}
 						else{
 							plane.elevation = plane.elevation + 10;
-							return sto_set(sto_db, plane, plane.id);
+							return sto_set(&sto_db, &plane, plane.id);
 						}
 					break;
 		case descend : if( plane.elevation <= -30) { 
@@ -207,14 +208,14 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 						}
 						else{
 						 	plane.elevation = plane.elevation - 10;
-							return sto_set(sto_db, plane, plane.id);
+							return sto_set(&sto_db, &plane, plane.id);
 						}
 					break;
 		case turn_rigth : 	plane.heading = (plane.heading -45);
-							return sto_set(sto_db, plane, plane.id);
+							return sto_set(&sto_db, &plane, plane.id);
 					break;
 		case turn_left : 	plane.heading = (plane.heading +45);
-							return sto_set(sto_db, plane, plane.id);
+							return sto_set(&sto_db, &plane, plane.id);
 					break;
 		default : return 0;
 	}
@@ -224,17 +225,18 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 
 int get_airplanes(struct atc_plane buffer[])
 {
+	time_t current_time = get_time();
 	struct atc_plane plane;
 	int count = 0;
 	struct sto_cursor query;
-	sto_query(&query, &sto_db, flying_planes);
+	sto_query(&query, &sto_db, _flying_planes);
 
 	int new_plane_flag = 1;
 	new_plane_flag = sto_get(&query, &plane, NULL);
 
 	while( (new_plane_flag != 0 && count < MAX_PLANES) ){
-		if(calculate_position()){
-			memcpy(&buffer[count], &plane, sizeof(struct atc_plane);
+		if(calculate_position(&plane, current_time) ){
+			memcpy(&buffer[count], &plane, sizeof(struct atc_plane));
 			count++;
 		}
 		new_plane_flag = sto_get(&query, &plane, NULL);
@@ -245,7 +247,7 @@ int get_airplanes(struct atc_plane buffer[])
 	return count;
 }
 
-int flying_planes(struct atc_plane plane, char name[6])
+static int _flying_planes(struct atc_plane plane, char name[6])
 {
 	return plane.status == flying;
 }
