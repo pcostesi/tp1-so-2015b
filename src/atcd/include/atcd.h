@@ -10,6 +10,7 @@
 #define MAX_LEN 40
 #define MAX_HEIGHT 20
 #define MAX_AIRPORTS 2
+#define MAX_PLANES 50
 
 
 //ENUMS & STRUCTS
@@ -42,7 +43,7 @@ struct atc_airport{
 
 //HEADERS
 
-void calculate_position(struct atc_plane* , time_t);
+int calculate_position(struct atc_plane* , time_t);
 
 int atcd_test(void);
 
