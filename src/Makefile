@@ -12,6 +12,7 @@ BIN=../bin
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(INCLUDES) $(I_BKND) -fPIC
 
+TESTSRC=$(wildcard test/*.c)
 ATCCSRC=$(wildcard atcc/*.c)
 ATCDSRC=$(wildcard atcd/*.c)
 CLISRC=$(wildcard cli/*.c)
@@ -22,6 +23,7 @@ COMMSRCBKND=$(wildcard transport/$(BACKEND)/*.c)
 # The overkill, one size fits all solution to PEOPLE CHANGING HEADERS.
 HEADERS=$(shell find . -name *.h)
 
+TESTOBJ=$(TESTSRC:.c=.o)
 ATCCOBJ=$(ATCCSRC:.c=.o)
 ATCDOBJ=$(ATCDSRC:.c=.o)
 CLIOBJ=$(CLISRC:.c=.o)
@@ -70,5 +72,9 @@ clean:
 run:	$(CLI) $(SRV) $(ATC)
 	valgrind $< > $<.log &
 
-.PHONY: clean run all $(SRV) $(CLI)
+test:	$(TESTOBJ)
+	@mkdir -p ${BIN}/test
+	$(CC) $(LDFLAGS) -o ${BIN}/$(<:.o=) $<
+
+.PHONY: clean run all $(SRV) $(CLI) test
 
