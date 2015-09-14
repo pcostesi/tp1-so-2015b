@@ -23,7 +23,7 @@ enum atc_commands{speed_up, speed_down, climb, descend, turn_rigth, turn_left};
 
 struct atc_plane { 
     char id[6];
-    int x;
+    int x; //expressed
     int y;
     int z;
     time_t time;
