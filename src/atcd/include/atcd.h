@@ -7,8 +7,8 @@
 #include <storage.h>
 
 #define LANDING_TOLERANCE 200
-#define MAX_LEN 40
-#define MAX_HEIGHT 20
+#define MAX_LEN 4000
+#define MAX_HEIGHT 4000
 #define MAX_AIRPORTS 2
 #define MAX_PLANES 50
 
