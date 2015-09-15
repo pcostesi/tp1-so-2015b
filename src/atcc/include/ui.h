@@ -7,7 +7,7 @@
 #define MAP_WIDTH 50
 #define MAP_HEIGHT 25
 #define LIST_WIDTH 20
-#define ACTION_HEIGHT 7
+#define LOG_HEIGHT 1
 #define CMD_HEIGHT 1
 
 #define BORDER 2
@@ -19,7 +19,7 @@
 void init();
 void draw();
 void dispose();
-void print_cmd(char *str);
+void clear_log();
 void ui_test();	
 void interpret_ch(int ch);
 
