@@ -11,6 +11,8 @@ I_BKND=-I./transport/include -I./transport/$(BACKEND)/include
 BIN=../bin
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(INCLUDES) $(I_BKND) -fPIC
+LIBS= ncurses m
+LINKS=$(foreach lib,$(LIBS),-l$(lib))
 
 TESTSRC=$(wildcard test/*.c)
 ATCCSRC=$(wildcard atcc/*.c)
@@ -50,17 +52,17 @@ $(CLI):	$(CLI_BIN)
 
 $(CLI_BIN):	$(COMM) $(CLIOBJ) $(ATCCOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
 
 $(SRV): $(SRV_BIN)
 
 $(SRV_BIN):	$(COMM) $(SRVOBJ) $(ATCDOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
 
 $(ATC_BIN):	$(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
 
 $(ATC):	$(ATC_BIN)
 
