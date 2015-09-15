@@ -1,82 +1,102 @@
 #include <ncurses.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <ctype.h>
 #include "./include/ui.h"
 #include "../atcd/include/atcd.h"
 
 static WINDOW *map, *cmd_log, *plane_list, *actions;
 static WINDOW *brd_map, *brd_cmd_log, *brd_plane_list, *brd_actions;
 static int cur_line;
-static struct atc_plane planes[MAX_PLANES];
+
+static struct atc_plane planes[MAX_PLANES] = {{"AA1234", 1, 2, 3}, {"XX1234", 5, 3, 1,}};
+static int planes_num;
+
+static int cur_plane;
+static int cur_cmd;
+static int cur_page;
 
 void ui_test(){
 	init();
 	while(1){
 		draw();
-		//cmd_scan();
+		print_cmd("asd");
+		int ch = getch();
+		interpret_ch(ch);
 	}
 	dispose();
 }
 
-
-void cmd_scan(){
-	char scan_cmd[32];
-	char scan_plane[32];
-	wscanw(cmd, "%s:%s", &scan_cmd, &scan_plane);
-	execute_cmd(&scan_cmd, &scan_plane);	
-	wclear(cmd);
-}
-
-void execute_cmd(char *scan_cmd, char *scan_plane){
-	struct atc_plane plane;
-	int found_plane = get_plane(scan_plane, &plane);
-	if (!found_plane){
-		print_cmd("Plane doesnt exist");
-	}
-	if(strcmp(scan_cmd, "SPDUP")){
-		set(speed_up, plane);
-	}else if(strcmp(scan_cmd, "SPDDW")){
-		set(speed_down, plane);
-	}else if(strcmp(scan_cmd, "UP")){
-		set(climb, plane);
-	}else if(strcmp(scan_cmd, "DN")){
-		set(descend, plane);
-	}else if(strcmp(scan_cmd, "TR")){
-		set(turn_right, plane);
-	}else if(strcmp(scan_cmd, "TL")){
-		set(turn_left, plane);
-	}else{
-		print_cmd("Unsupported command");
-	}
-}
-
-int get_plane(char *plane_name, struct atc_plane *plane){
-	int i;
-	for (i = 0; i < planes_num; i++){
-		if (strcmp(plane_name, planes[i].id)){
-			plane = planes[i];
-			return 1;
+void interpret_ch(int ch){
+	print_cmd("HOLA K ASE");
+	if (ch == ERR){
+		return;
+	}else if (ch >= 0 && ch < 10){
+		if (cur_plane == -1){
+			if (ch < planes_num){
+				cur_plane = ch;
+			}
+			return;
+		}else if (cur_cmd == -1){
+			if (ch >= 0 && ch < 6){
+				cur_cmd = ch;
+			}
+			return;
 		}
+	}else if (ch == KEY_DOWN){
+		if (cur_page > 0){
+			cur_page--;
+		}
+	}else if (ch == KEY_UP){
+		if (cur_page < MAX_PLANES/PLANES_PER_PAGE){
+			cur_page++;
+		}
+	}else if (ch == KEY_BREAK && cur_cmd >= 0 && cur_plane >= 0){
+		//struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
+		//set(cur_cmd, plane);
+		if(cur_cmd == speed_up){
+			print_cmd("Speeding up");
+		}else if(cur_cmd == speed_down){
+			print_cmd("Speeding down");
+		}else if(cur_cmd == climb){
+			print_cmd("Ascending");
+		}else if(cur_cmd == descend){
+			print_cmd("Descending");
+		}else if(cur_cmd == turn_right){
+			print_cmd("Turning right");
+		}else if(cur_cmd == turn_left){
+			print_cmd("Turning left");
+		}
+		cur_plane = -1;
+		cur_cmd = -1;
 	}
-	return 0;
 }
 
 void init(){
 	initscr();
-	init_brd();
+	cbreak();
+	noecho();
+	timeout(TIMEOUT);
+
+	brd_map = newwin(MAP_HEIGHT+BORDER, MAP_WIDTH+BORDER, 0, 0);
+	brd_plane_list = newwin(MAP_HEIGHT+BORDER, LIST_WIDTH+BORDER, 0, MAP_WIDTH+BORDER);
+	brd_cmd_log = newwin(ACTION_HEIGHT+BORDER, MAP_WIDTH+BORDER, MAP_HEIGHT+BORDER, 0);
+	brd_actions = newwin(ACTION_HEIGHT+BORDER, LIST_WIDTH+BORDER, MAP_HEIGHT+BORDER, MAP_WIDTH+BORDER);
 
 	map = newwin(MAP_HEIGHT, MAP_WIDTH, 1, 1);
-	plane_list = newwin(MAP_HEIGHT, LIST_WIDTH, 1, MAP_WIDTH+BORDER*2+1);
-	cmd_log = newwin(LOG_HEIGHT, MAP_WIDTH, MAP_HEIGHT+BORDER*2+1, 1);
-	actions = newwin(LOG_HEIGHT, LIST_WIDTH, MAP_HEIGHT+BORDER*2+1, MAP_WIDTH+BORDER*2+1);
+	plane_list = newwin(MAP_HEIGHT, LIST_WIDTH, 1, MAP_WIDTH+BORDER+1);
+	cmd_log = newwin(ACTION_HEIGHT, MAP_WIDTH, MAP_HEIGHT+BORDER+1, 1);
+	actions = newwin(ACTION_HEIGHT, LIST_WIDTH, MAP_HEIGHT+BORDER+1, MAP_WIDTH+BORDER+1);
+	
 	cur_line = 0;	
+	cur_page = 0;
+	cur_plane = -1;
+	cur_cmd = -1;
 }
 
-void init_brd(){
-	brd_map = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
-	brd_plane_list = newwin(MAP_HEIGHT, LIST_WIDTH, 0, MAP_WIDTH+BORDER*2);
-	brd_cmd_log = newwin(LOG_HEIGHT, MAP_WIDTH, MAP_HEIGHT+BORDER*2, 0);
-	brd_actions = newwin(LOG_HEIGHT, LIST_WIDTH, MAP_HEIGHT+BORDER*2, MAP_WIDTH+BORDER*2);
+void draw(){
+	wclear(map);
+	wclear(plane_list);	
 
 	box(brd_map, 0, 0);
 	box(brd_cmd_log, 0, 0);
@@ -87,21 +107,13 @@ void init_brd(){
 	wrefresh(brd_cmd_log);
 	wrefresh(brd_plane_list);
 	wrefresh(brd_actions);
-}
-
-void draw(){
-	wclear(map);
-	wclear(plane_list);	
-
 	// //!!!CHANGE TO ACTUAL FUNCTION!!!
-	planes = {{"AA1234", 1, 2, 3}, {"XX1234", 5, 3, 1,}};
-	int planes_num = 2;
+	planes_num = 2;
 	planes[0].status = landed;
 	planes[1].status = crashed;
 
 	//FUNCION POSTA
-	//struct atc_plane planes[MAX_PLANES];
-	//int planes_num = get_planes(planes);
+	//planes_num = get_planes(planes);
 
 	// //!!!CHANGE FOR ACTUAL FUNCTION!!!
 	struct atc_airport airports[MAX_AIRPORTS] = {{13, 15, "LAX"}, {10, 10, "EZE"}};
@@ -121,21 +133,24 @@ void draw(){
 
 	for (i = 0; i < planes_num; i++){
 		mvwprintw(map, planes[i].y, planes[i].x, "+");
-
-		mvwprintw(plane_list, i*2, 0, "%s (%d, %d, %d)", planes[i].id, planes[i].x, planes[i].y, planes[i].z);
-		mvwchgat(plane_list, i*2, 0, -1, A_BOLD, 0, NULL);
-		switch (planes[i].status){
-			case landed:
-				mvwprintw(plane_list, i*2+1, 0, "Landed");
-				break;
-			case crashed:
-				mvwprintw(plane_list, i*2+1, 0, "Crashed");
-				break;
-			case flying:
-				mvwprintw(plane_list, i*2+1, 0, "Flying");
-				break;
-		}
-		
+		if (i >= cur_page*PLANES_PER_PAGE && i < PLANES_PER_PAGE*(cur_page+1)){
+			mvwprintw(plane_list, i*2, 0, "%s (%d, %d, %d)", planes[i].id, planes[i].x, planes[i].y, planes[i].z);
+			mvwchgat(plane_list, i*2, 0, -1, A_BOLD, 0, NULL);
+			if (cur_plane > 0 && i == cur_page*PLANES_PER_PAGE+cur_plane){
+				mvwchgat(plane_list, i*2, 0, -1, A_REVERSE, 0, NULL);
+			}
+			switch (planes[i].status){
+				case landed:
+					mvwprintw(plane_list, i*2+1, 0, "Landed");
+					break;
+				case crashed:
+					mvwprintw(plane_list, i*2+1, 0, "Crashed");
+					break;
+				case flying:
+					mvwprintw(plane_list, i*2+1, 0, "Flying");
+					break;
+			}
+		}		
 	}
 
 	wrefresh(map);
@@ -146,7 +161,7 @@ void print_cmd(char *str){
 	wmove(cmd_log, cur_line, 0);
 	wclrtoeol(cmd_log);
 	mvwprintw(cmd_log, cur_line++, 0, str);
-	cur_line %= LOG_HEIGHT;
+	cur_line %= ACTION_HEIGHT;
 	wrefresh(cmd_log);
 }
 
@@ -154,6 +169,6 @@ void dispose(){
 	delwin(map);
 	delwin(cmd_log);
 	delwin(plane_list);
-	delwin(cmd);
+	delwin(actions);
 	endwin();
 }

@@ -4,21 +4,24 @@
 #define MAX_PLANES 16
 #define MAX_AIRPORTS 10
 
-#define MAP_WIDTH 20
-#define MAP_HEIGHT 20
+#define MAP_WIDTH 50
+#define MAP_HEIGHT 25
 #define LIST_WIDTH 20
-#define LOG_HEIGHT 4
+#define ACTION_HEIGHT 7
 #define CMD_HEIGHT 1
 
 #define BORDER 2
 
+#define PLANES_PER_PAGE 10
+
+#define TIMEOUT 250
+
 void init();
-void init_brd();
 void draw();
 void dispose();
 void print_cmd(char *str);
 void ui_test();	
-void cmd_scan();
+void interpret_ch(int ch);
 
 #endif
 
