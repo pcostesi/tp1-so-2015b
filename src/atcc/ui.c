@@ -30,8 +30,9 @@ void interpret_ch(int ch){
 		if (cur_plane == -1){
 			if (ch-'0' < planes_num){
 				cur_plane = ch-'0';
+				struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
 				clear_log();
-				mvwprintw(cmd_log, 0, 0, "%s %d", "cur plane is ",cur_plane);
+				mvwprintw(cmd_log, 0, 0, "%s %s", "Selected plane",plane.id);
 			}
 			return;
 		}else if (cur_cmd == -1){
@@ -55,21 +56,21 @@ void interpret_ch(int ch){
 			mvwprintw(cmd_log, cur_line, 0, "%s", "page up");
 		}
 	}else if (ch == '\n' && cur_cmd != -1 && cur_plane != -1){
-		//struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
+		struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
 		//set(cur_cmd, plane);
 		clear_log();
 		if(cur_cmd == speed_up){
-			mvwprintw(cmd_log, cur_line, 0, "%s", "Speeding up");
+			mvwprintw(cmd_log, cur_line, 0, "%s %s", plane.id, "is speeding up");
 		}else if(cur_cmd == speed_down){
-			mvwprintw(cmd_log, cur_line, 0, "%s", "Speeding down");
+			mvwprintw(cmd_log, cur_line, 0, "%s %s", plane.id, "is speeding down");
 		}else if(cur_cmd == climb){
-			mvwprintw(cmd_log, cur_line, 0, "%s", "Ascending");
+			mvwprintw(cmd_log, cur_line, 0, "%s %s", plane.id, "is ascending");
 		}else if(cur_cmd == descend){
-			mvwprintw(cmd_log, cur_line, 0, "%s", "Descending");
+			mvwprintw(cmd_log, cur_line, 0, "%s %s", plane.id, "is descending");
 		}else if(cur_cmd == turn_right){
-			mvwprintw(cmd_log, cur_line, 0, "%s", "Turning right");
+			mvwprintw(cmd_log, cur_line, 0, "%s %s", plane.id, "is turning right");
 		}else if(cur_cmd == turn_left){
-			mvwprintw(cmd_log, cur_line, 0, "%s", "Turning left");
+			mvwprintw(cmd_log, cur_line, 0, "%s %s", plane.id, "is turning left");
 		}
 		cur_plane = -1;
 		cur_cmd = -1;		
