@@ -26,7 +26,7 @@ struct atc_airport{
 	char id[3];
 };
 
-enum atc_commands{speed_up, speed_down, climb, descend, turn_rigth, turn_left};
+enum atc_commands{speed_up, speed_down, climb, descend, turn_right, turn_left};
 
 int atcd_test(void);
 

@@ -3,12 +3,12 @@
 
 #include <time.h>
 
-void join_game();
-void leave_game();
+void join_game(void);
+void leave_game(void);
 
-void set();
-time_t get_time();
-void draw();
-void draw_planes();
+void set(void);
+time_t get_time(void);
+void draw(void);
+void draw_planes(void);
 
 #endif

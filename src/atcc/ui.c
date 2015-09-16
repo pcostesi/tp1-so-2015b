@@ -16,7 +16,7 @@ static int cur_plane;
 static int cur_cmd;
 static int cur_page;
 
-void ui_test(){
+void ui_test(void){
 	init();
 	while(1){
 		draw();
@@ -78,7 +78,7 @@ void interpret_ch(int ch){
 }
 
 
-void init(){
+void init(void){
 	initscr();
 	noecho();
 	keypad(cmd_log, TRUE);
@@ -110,7 +110,7 @@ void init(){
 	cur_cmd = -1;
 }
 
-void draw(){
+void draw(void){
 	wclear(map);
 	wclear(plane_list);	
 	wclear(cmds);	
@@ -174,7 +174,7 @@ void draw(){
 	wrefresh(cmd_log);
 }
 
-void clear_log(){
+void clear_log(void){
 	wmove(cmd_log, 0, 0);
 	wclrtoeol(cmd_log);
 }
@@ -196,9 +196,10 @@ char *get_cmdname(int cmd){
 	}
 }
 
-void dispose(){
+void dispose(void){
 	delwin(map);
 	delwin(cmd_log);
 	delwin(plane_list);
 	endwin();
 }
+
