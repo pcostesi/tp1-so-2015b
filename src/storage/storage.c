@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
-#define ROUND_UP(number, mask) (((number) + (mask) - 1) & ~(mask))
+#define ROUND_UP(number, mask) (((number) + (mask) - 2) & ~((mask) - 1))
 
 /* Internal prototypes */
 
@@ -20,15 +20,14 @@ static int _noop_cmp(void * v, char key[STO_KEY_SIZE]);
 
 int sto_init(struct sto_database * conn, char * name, size_t data_type_size)
 {
-    char filename[STO_MAX_FILENAME_SIZE + 1];
     if (conn == NULL || data_type_size == 0 || name == NULL) {
         return -1;
     }
-    strncpy(filename, name, STO_MAX_FILENAME_SIZE);
+    strncpy(conn->path, name, STO_MAX_FILENAME_SIZE);
     strncpy(conn->name, name, STO_MAX_NAME_LENGTH);
     conn->data_size = data_type_size;
     /* store things 32-bit aligned. */
-    conn->row_size = ROUND_UP(STO_KEY_SIZE + data_type_size, 0x1F);
+    conn->row_size = ROUND_UP(STO_KEY_SIZE + data_type_size, 32);
     return 0;
 }
 
@@ -42,7 +41,7 @@ int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filt
         filter = (sto_filter) _noop_cmp;
     }
 
-    q->fd = open(conn->path, O_CREAT | O_RDWR | O_DSYNC);
+    q->fd = open(conn->path, O_CREAT | O_RDWR | O_DSYNC, S_IRUSR | S_IWUSR);
     if (q->fd == -1) {
         return -1;
     }
@@ -85,16 +84,19 @@ int sto_key_empty(char key[STO_KEY_SIZE])
     return !memcmp(key, empty, STO_KEY_SIZE);
 }
 
-int sto_set(struct sto_database * conn, void * row, char key[STO_KEY_SIZE])
+int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE])
 {
     struct sto_cursor q;
     char tmp_key[STO_KEY_SIZE];
     int res;
+    int key_len = 0;
     int bytes_written = 0;
 
     if (sto_query(&q, conn, NULL) == -1) {
         return -1;
     }
+
+    key_len = strnlen(key, STO_KEY_SIZE);
 
     _acquire_w_lock(&q.zone_lock, q.fd, 0, 0);
     while ((res = _fetch_next_record(&q, NULL, tmp_key)) != 0) {
@@ -106,7 +108,9 @@ int sto_set(struct sto_database * conn, void * row, char key[STO_KEY_SIZE])
     }
    
     if (sto_key_empty(tmp_key)) {
-        bytes_written = write(q.fd, key, STO_KEY_SIZE);
+        memset(tmp_key, 0, STO_KEY_SIZE);
+        strncpy(tmp_key, key, key_len);
+        bytes_written = write(q.fd, tmp_key, STO_KEY_SIZE);
         if (bytes_written == -1) {
             sto_close(&q);
             _release_lock(&q.zone_lock, q.fd);
@@ -114,14 +118,12 @@ int sto_set(struct sto_database * conn, void * row, char key[STO_KEY_SIZE])
         }
     }
 
-    if (strncmp(key, tmp_key, STO_KEY_SIZE)) {
         bytes_written = write(q.fd, row, conn->data_size);
         if (bytes_written == -1) {
             sto_close(&q);
             _release_lock(&q.zone_lock, q.fd);
             return -1;
         }
-    }
     
     sto_close(&q);
     _release_lock(&q.zone_lock, q.fd);
@@ -138,7 +140,7 @@ int sto_dispose(struct sto_database * conn)
     struct flock clean;
     int fd;
 
-    fd = open(conn->path, O_CREAT | O_WRONLY | O_DSYNC);
+    fd = open(conn->path, O_CREAT | O_WRONLY | O_DSYNC, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return -1;
     }
@@ -184,14 +186,14 @@ static int _fetch_next_record(struct sto_cursor * q, void * buffer,
     offset = q->cursor * db->row_size;
     //_acquire_r_lock(&q->zone_lock, q->fd, offset, db->row_size);
    
-    bytes_read = lseek(q->fd, offset * db->row_size, SEEK_SET);
+    bytes_read = lseek(q->fd, offset, SEEK_SET);
     if (bytes_read == -1) {
         goto _FNR_RELEASE;
     }
     bytes_read = read(q->fd, _key, STO_KEY_SIZE);
     if (bytes_read == 0) {
         memset(_key, 0, STO_KEY_SIZE);
-        memset(buffer, 0, db->data_size);
+        if (buffer != NULL) memset(buffer, 0, db->data_size);
         goto _FNR_RELEASE;
     }
 
@@ -223,7 +225,6 @@ static int _acquire_lock(struct flock * lock, int fd, int l_type, int pos, int s
     lock->l_start = pos;
     lock->l_len = size;
     lock->l_pid = getpid();
-
     return fcntl(fd, F_SETLKW, lock);
 }
 

@@ -3,6 +3,7 @@
 
 #include <fcntl.h>
 #include <stddef.h>
+#include <string.h>
 
 #define STO_MAX_FILENAME_SIZE 128
 #define STO_MAX_NAME_LENGTH 64
@@ -31,7 +32,7 @@ int sto_init(struct sto_database * conn, char * name, size_t data_type_size);
 int sto_close(struct sto_cursor * q);
 int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filter);
 int sto_get(struct sto_cursor * q, void * row, char key[STO_KEY_SIZE]);
-int sto_set(struct sto_database * conn, void * row, char key[STO_KEY_SIZE]);
+int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE]);
 int sto_dispose(struct sto_database * conn);
 int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra);
 int sto_del(struct sto_database * conn, void * row, char key[STO_KEY_SIZE]);

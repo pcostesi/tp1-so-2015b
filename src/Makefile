@@ -16,9 +16,9 @@ LINKS=$(foreach lib,$(LIBS),-l$(lib))
 
 TESTSRC=$(wildcard test/*.c)
 ATCCSRC=$(wildcard atcc/*.c)
-ATCDSRC=$(wildcard atcd/*.c)
+ATCDSRC=$(wildcard atcd/*.c) $(wildcard storage/*.c)
 CLISRC=$(wildcard cli/*.c)
-SRVSRC=$(wildcard srv/*.c) $(wildcard storage/*.c)
+SRVSRC=$(wildcard srv/*.c)
 COMMSRC=$(wildcard transport/*.c) $(wildcard protocol/*.c)
 COMMSRCBKND=$(wildcard transport/$(BACKEND)/*.c)
 
@@ -74,9 +74,9 @@ clean:
 run:	$(CLI) $(SRV) $(ATC)
 	valgrind $< > $<.log &
 
-test:	$(TESTOBJ)
+test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p ${BIN}/test
-	$(CC) $(LDFLAGS) -o ${BIN}/$(<:.o=) $<
+	$(CC) $(LDFLAGS) -o ${BIN}/test/storage ./test/storage.o $(ATCDOBJ)
 
 .PHONY: clean run all $(SRV) $(CLI) test
 
