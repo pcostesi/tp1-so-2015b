@@ -105,6 +105,9 @@ int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE]
             _release_lock(&q.zone_lock, q.fd);
             return -1;
         }
+        if (strncmp(tmp_key, key, key_len) == 0) {
+            break;
+        }
     }
    
     if (sto_key_empty(tmp_key)) {
@@ -118,12 +121,12 @@ int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE]
         }
     }
 
-        bytes_written = write(q.fd, row, conn->data_size);
-        if (bytes_written == -1) {
-            sto_close(&q);
-            _release_lock(&q.zone_lock, q.fd);
-            return -1;
-        }
+    bytes_written = write(q.fd, row, conn->data_size);
+    if (bytes_written == -1) {
+        sto_close(&q);
+        _release_lock(&q.zone_lock, q.fd);
+        return -1;
+    }
     
     sto_close(&q);
     _release_lock(&q.zone_lock, q.fd);
@@ -184,17 +187,16 @@ static int _fetch_next_record(struct sto_cursor * q, void * buffer,
 
     db = q->database;
     offset = q->cursor * db->row_size;
-    //_acquire_r_lock(&q->zone_lock, q->fd, offset, db->row_size);
    
     bytes_read = lseek(q->fd, offset, SEEK_SET);
     if (bytes_read == -1) {
-        goto _FNR_RELEASE;
+        return -1;
     }
     bytes_read = read(q->fd, _key, STO_KEY_SIZE);
     if (bytes_read == 0) {
         memset(_key, 0, STO_KEY_SIZE);
         if (buffer != NULL) memset(buffer, 0, db->data_size);
-        goto _FNR_RELEASE;
+        return 0;
     }
 
     if (buffer != NULL) {
@@ -203,8 +205,6 @@ static int _fetch_next_record(struct sto_cursor * q, void * buffer,
 
     q->cursor += 1;
 
-    _FNR_RELEASE:
-    //_release_lock(&q->zone_lock, q->fd);
     return bytes_read;
 }
 
