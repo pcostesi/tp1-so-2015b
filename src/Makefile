@@ -12,17 +12,21 @@ BIN=../bin
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(INCLUDES) $(I_BKND) -fPIC
 LDFLAGS+=-lm
+LIBS= ncurses m
+LINKS=$(foreach lib,$(LIBS),-l$(lib))
 
+TESTSRC=$(wildcard test/*.c)
 ATCCSRC=$(wildcard atcc/*.c)
-ATCDSRC=$(wildcard atcd/*.c)
+ATCDSRC=$(wildcard atcd/*.c) $(wildcard storage/*.c)
 CLISRC=$(wildcard cli/*.c)
-SRVSRC=$(wildcard srv/*.c) $(wildcard storage/*.c)
+SRVSRC=$(wildcard srv/*.c)
 COMMSRC=$(wildcard transport/*.c) $(wildcard protocol/*.c)
 COMMSRCBKND=$(wildcard transport/$(BACKEND)/*.c)
 
 # The overkill, one size fits all solution to PEOPLE CHANGING HEADERS.
 HEADERS=$(shell find . -name *.h)
 
+TESTOBJ=$(TESTSRC:.c=.o)
 ATCCOBJ=$(ATCCSRC:.c=.o)
 ATCDOBJ=$(ATCDSRC:.c=.o)
 CLIOBJ=$(CLISRC:.c=.o)
@@ -49,17 +53,17 @@ $(CLI):	$(CLI_BIN)
 
 $(CLI_BIN):	$(COMM) $(CLIOBJ) $(ATCCOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
 
 $(SRV): $(SRV_BIN)
 
 $(SRV_BIN):	$(COMM) $(SRVOBJ) $(ATCDOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
 
 $(ATC_BIN):	$(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
 
 $(ATC):	$(ATC_BIN)
 
@@ -71,5 +75,9 @@ clean:
 run:	$(CLI) $(SRV) $(ATC)
 	valgrind $< > $<.log &
 
-.PHONY: clean run all $(SRV) $(CLI)
+test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
+	@mkdir -p ${BIN}/test
+	$(CC) $(LDFLAGS) -o ${BIN}/test/storage ./test/storage.o $(ATCDOBJ)
+
+.PHONY: clean run all $(SRV) $(CLI) test
 
