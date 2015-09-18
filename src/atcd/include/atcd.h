@@ -18,7 +18,7 @@
 enum atc_heading { SW=225, W=180, NW=135, N=90, NE=45, E=0, SE=315, S=270 };
 enum atc_status{landed, crashed, flying};
 enum atc_elevation { UP_1 = 10, UP_2 = 20, UP_3 = 30, STRAIGTH = 0, DOWN_1 = -10, DOWN_2 = -20, DOWN_3 = -30 };
-enum atc_commands{speed_up, speed_down, climb, descend, turn_rigth, turn_left};
+enum atc_commands{speed_up, speed_down, climb, descend, turn_right, turn_left};
 
 
 struct atc_plane { 
