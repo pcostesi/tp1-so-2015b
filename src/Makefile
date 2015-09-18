@@ -11,6 +11,7 @@ I_BKND=-I./transport/include -I./transport/$(BACKEND)/include
 BIN=../bin
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(INCLUDES) $(I_BKND) -fPIC
+LDFLAGS+=-lm
 LIBS= ncurses m
 LINKS=$(foreach lib,$(LIBS),-l$(lib))
 

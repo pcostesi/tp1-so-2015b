@@ -38,3 +38,4 @@ int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra);
 int sto_del(struct sto_database * conn, void * row, char key[STO_KEY_SIZE]);
 int sto_key_empty(char key[STO_KEY_SIZE]);
 #endif
+
