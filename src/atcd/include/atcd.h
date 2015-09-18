@@ -40,7 +40,6 @@ struct atc_airport{
 };
 
 int calculate_position(struct atc_plane* , time_t);
-enum atc_commands{speed_up, speed_down, climb, descend, turn_right, turn_left};
 
 int atcd_test(void);
 
