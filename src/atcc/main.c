@@ -34,9 +34,6 @@ void update_state(void){
 	if (difftime(state.cur_time, state.tick_time) > 20){
 		state.tick_time = state.cur_time;
 		create_plane();
-		/* clear_log();
-				struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
-				mvwprintw(cmd_log, 0, 0, "%s %s", "Selected plane",plane.id); */
 	}
 }
 
@@ -45,16 +42,11 @@ void input(int ch){
 		if (ui.cur_plane == -1){
 			if (ch-'0' < state.planes_num){
 				ui.cur_plane = ch-'0';
-				/* clear_log();
-				struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
-				mvwprintw(cmd_log, 0, 0, "%s %s", "Selected plane",plane.id); */
 			}
 			return;
 		}else if (ui.cur_cmd == -1){
 			if (ch >= '0' && ch <= '6'){
 				ui.cur_cmd = ch-'0';
-				/*clear_log();
-				mvwprintw(cmd_log, 0, 0, "%s %s", "Select command", get_cmdname(cur_cmd)); */
 			}
 			return;
 		}
