@@ -1,8 +1,10 @@
 #include "storage.h"
 #include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define ROUND_UP(number, mask) (((number) + (mask) - 2) & ~((mask) - 1))
 
