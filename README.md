@@ -8,6 +8,7 @@ Requirements:
 - Make
 - A modern C compiler (Clang, GCC, std99)
 - A UNIX environment
+- ncurses
 
 The project has multiple binaries. The default target `all` builds `atc`
 (a stand-alone executable), `atcd-socket` and `atcc-socket`. The transport
@@ -23,6 +24,11 @@ Builds the stand-alone binary
 
 Builds `atc`, `atcd-pipe`, and `atcc-pipe`.
 
+### Notes on NCurses
+
+For Ubuntu 14.04
+
+    apt-get install libncurses5-dev
 
 ## Debugging
 
