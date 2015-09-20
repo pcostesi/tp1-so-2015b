@@ -158,8 +158,8 @@ void create_plane()
 	new_plane.z	= rand()%9000 + 1000; /*//starting altitude, expressed in m*/
 	new_plane.time = time(NULL);
 	new_plane.heading = (enum atc_heading)((rand() % 7) * 45);	
-	new_plane.elevation	= (enum atc_elevation)( (rand()%7-6) *10);
-	new_plane.speed	= rand()%195 + 55;
+	new_plane.elevation	= 0;
+	new_plane.speed	= (rand()%15)*14 + 42;
 	new_plane.status = flying;
 
 	sto_set(&sto_db, &new_plane, new_plane.id);
@@ -188,7 +188,7 @@ time_t get_time()
 int set(enum atc_commands cmd, struct atc_plane plane)
 {
 	switch (cmd){
-		case speed_up : if(plane.speed * 10 >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
+		case speed_up : if(plane.speed  >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
 							return -1;
 						}
 						else{

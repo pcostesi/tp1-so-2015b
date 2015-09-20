@@ -26,7 +26,7 @@ struct atc_plane {
     time_t time; 
     enum atc_heading heading; /*expressed in cardinal points*/
     enum atc_elevation elevation; /*expressed in elevation angle*/
-    char speed; /*expressed in m/s*/
+    int speed; /*expressed in m/s*/
     enum atc_status status;
 };
 
