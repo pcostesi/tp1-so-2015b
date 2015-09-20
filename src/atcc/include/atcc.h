@@ -3,7 +3,7 @@
 
 #define LIST_HEIGHT 20
 #define LIST_WIDTH 29
-#define LIST_CMDS 7
+#define LIST_CMDS 6
 #define LOG_HEIGHT 1
 #define BORDER 2
 #define MAP_HEIGHT LIST_CMDS+LIST_HEIGHT+BORDER

@@ -62,13 +62,14 @@ void input(int ch){
 		if (ui.cur_page > 0){
 			ui.cur_page--;
 			clear_UI();
-			mvwprintw(ui.cmd_log, 0, 0, "%s", "page down");
+			mvwprintw(ui.cmd_log, 0, 0, "Moved to page %d", ui.cur_page);
 		}
 	}else if (ch == 65){
+		
 		if (ui.cur_page+1 < state.planes_num/PLANES_PER_PAGE){
 			ui.cur_page++;
 			clear_UI();
-			mvwprintw(ui.cmd_log, 0, 0, "%s", "page up");
+			mvwprintw(ui.cmd_log, 0, 0, "Moved to page %d", ui.cur_page);
 		}
 	}else if (ch == '\n' && ui.cur_cmd != -1 && ui.cur_plane != -1){
 		struct atc_plane plane = state.planes[ui.cur_page*PLANES_PER_PAGE+ui.cur_plane];
@@ -138,20 +139,20 @@ void draw_UI(void){
 	for (i = 0; i < state.planes_num; i++){
 		mvwprintw(ui.map, (state.planes[i].y/(float)MAX_HEIGHT)*(MAP_HEIGHT), (state.planes[i].x/(float)MAX_LEN)*(MAP_WIDTH), "%d", i);
 		if (i >= ui.cur_page*PLANES_PER_PAGE && i < PLANES_PER_PAGE*(ui.cur_page+1)){
-			mvwprintw(ui.plane_list, i*2, 0, "%d: %s (%d, %d, %d)", i%PLANES_PER_PAGE, state.planes[i].id, state.planes[i].x, state.planes[i].y, state.planes[i].z);
-			mvwchgat(ui.plane_list, i*2, 0, -1, A_BOLD, 0, NULL);
+			mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2, 0, "%d: %s (%d, %d, %d)", i%PLANES_PER_PAGE, state.planes[i].id, state.planes[i].x, state.planes[i].y, state.planes[i].z);
+			mvwchgat(ui.plane_list, (i%PLANES_PER_PAGE)*2, 0, -1, A_BOLD, 0, NULL);
 			if (ui.cur_plane >= 0 && i == ui.cur_page*PLANES_PER_PAGE+ui.cur_plane){
-				mvwchgat(ui.plane_list, i*2, 0, -1, A_REVERSE, 0, NULL);
+				mvwchgat(ui.plane_list, (i%PLANES_PER_PAGE)*2, 0, -1, A_REVERSE, 0, NULL);
 			}
 			switch (state.planes[i].status){
 				case landed:
-					mvwprintw(ui.plane_list, i*2+1, 0, "Landed");
+					mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "Landed");
 					break;
 				case crashed:
-					mvwprintw(ui.plane_list, i*2+1, 0, "Crashed");
+					mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "Crashed");
 					break;
 				case flying:
-					mvwprintw(ui.plane_list, i*2+1, 0, "Flying");
+					mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "Flying");
 					break;
 			}
 		}		
