@@ -143,7 +143,7 @@ void draw_UI(void){
 			if (ui.cur_plane >= 0 && i == ui.cur_page*PLANES_PER_PAGE+ui.cur_plane){
 				mvwchgat(ui.plane_list, (i%PLANES_PER_PAGE)*2, 0, -1, A_REVERSE, 0, NULL);
 			}
-			mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "S:%s E:%d V:%d H:%d", get_status(state.planes[i].status), state.planes[i].elevation, state.planes[i].speed, state.planes[i].heading);
+			mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "%s E:%d S:%d H:%d", get_status(state.planes[i].status), state.planes[i].elevation, state.planes[i].speed, state.planes[i].heading);
 		}		
 	}
 
