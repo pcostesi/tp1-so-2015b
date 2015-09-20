@@ -260,9 +260,9 @@ int get_airplanes(struct atc_plane buffer[])
 
 
 /*Auxiliary function to start a query*/
-static int _flying_planes(struct atc_plane plane, char name[6])
+static int _flying_planes(struct atc_plane * plane, char name[6])
 {
-	return plane.status == flying;
+	return plane->status == flying;
 }
 
 
