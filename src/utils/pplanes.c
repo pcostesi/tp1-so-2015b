@@ -6,7 +6,7 @@
 
 void print_row(struct atc_plane * plane, char key[STO_KEY_SIZE])
 {
-    printf("%*s:\t %6s\t <%3d, %3d, %3d>\t %d, %d, %d, %c, %d\n",
+    printf("Key %*s: %6s\t <%3d, %3d, %3d>\t %d, %d, %d, %c, %d\n",
             STO_KEY_SIZE,
             key,
             plane->id,

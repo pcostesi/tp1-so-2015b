@@ -175,7 +175,7 @@ int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra)
 
 static int _noop_cmp(void * v, char key[STO_KEY_SIZE])
 {
-    return 0;
+    return 1;
 }
 
 static int _fetch_next_record(struct sto_cursor * q, void * buffer,
