@@ -34,6 +34,9 @@ void update_state(void){
 	if (difftime(state.cur_time, state.tick_time) > 20){
 		state.tick_time = state.cur_time;
 		create_plane();
+		/* clear_log();
+				struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
+				mvwprintw(cmd_log, 0, 0, "%s %s", "Selected plane",plane.id); */
 	}
 }
 
@@ -129,11 +132,11 @@ void draw_UI(void){
 	wclear(ui.map);
 	
 	for (i = 0; i < state.airports_num; i++){
-		mvwprintw(ui.map, (state.airports[i].y/(float)MAX_HEIGHT)*MAP_HEIGHT, (state.airports[i].x/(float)MAX_LEN)*MAP_WIDTH, "@");
+		mvwprintw(ui.map, (state.airports[i].y/(float)MAX_HEIGHT)*(MAP_HEIGHT), (state.airports[i].x/(float)MAX_LEN)*(MAP_WIDTH), "@");
 	}
 
 	for (i = 0; i < state.planes_num; i++){
-		mvwprintw(ui.map, (state.planes[i].y/(float)MAX_HEIGHT)*MAP_HEIGHT, (state.planes[i].x/(float)MAX_LEN)*MAP_WIDTH, "+");
+		mvwprintw(ui.map, (state.planes[i].y/(float)MAX_HEIGHT)*(MAP_HEIGHT), (state.planes[i].x/(float)MAX_LEN)*(MAP_WIDTH), "+");
 		if (i >= ui.cur_page*PLANES_PER_PAGE && i < PLANES_PER_PAGE*(ui.cur_page+1)){
 			mvwprintw(ui.plane_list, i*2, 0, "%d: %s (%d, %d, %d)", i%PLANES_PER_PAGE, state.planes[i].id, state.planes[i].x, state.planes[i].y, state.planes[i].z);
 			mvwchgat(ui.plane_list, i*2, 0, -1, A_BOLD, 0, NULL);
