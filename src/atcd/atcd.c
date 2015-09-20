@@ -270,6 +270,6 @@ static int _flying_planes(struct atc_plane plane, char name[6])
 
 int atc_init()
 {
-	return sto_init(&sto_db, "Planes", sizeof(struct atc_plane)) &&	create_plane() ;
+	return sto_init(&sto_db, "Planes", sizeof(struct atc_plane));
 
 }

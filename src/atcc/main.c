@@ -11,6 +11,7 @@ static struct atc_ui ui;
 
 int main(int argc, char ** argv)
 {
+	atc_init();
 	init_UI();
 	init_time();
 	while(1){
