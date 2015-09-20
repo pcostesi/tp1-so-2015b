@@ -13,7 +13,7 @@ int atcd_test(void)
 static void _set_plane_x_y(struct atc_plane *plane, int time_dif);
 static void _crashed_or_landed(struct atc_plane *plane);
 static int _in_da_zone(struct atc_plane *plane);
-static int _sin(int angle);
+static double _sin(int angle);
 static float _cos(int angle);
 static void _create_plane();
 static int _rand_number();
@@ -87,7 +87,7 @@ static int _in_da_zone(struct atc_plane *plane)
 }
 
 //hardcoded sin(x) values to avoid unnecesary calculation
-static int _sin(int angle)
+static double _sin(int angle)
 {
 	switch(angle){
 		case 0 : return 1.0;
@@ -188,7 +188,7 @@ time_t get_time()
 int set(enum atc_commands cmd, struct atc_plane plane)
 {
 	switch (cmd){
-		case speed_up : if(plane.speed >= 280) { //maximum plane speed 1000km/h expressed in 28m/s
+		case speed_up : if(plane.speed * 10 >= 280) { //maximum plane speed 1000km/h expressed in 28m/s
 							return -1;
 						}
 						else{
@@ -220,7 +220,7 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 							return sto_set(&sto_db, &plane, plane.id);
 						}
 					break;
-		case turn_rigth : 	plane.heading = (plane.heading -45);
+		case turn_right : 	plane.heading = (plane.heading -45);
 							return sto_set(&sto_db, &plane, plane.id);
 					break;
 		case turn_left : 	plane.heading = (plane.heading +45);
@@ -240,7 +240,7 @@ int get_airplanes(struct atc_plane buffer[])
 	struct atc_plane plane;
 	int count = 0;
 	struct sto_cursor query;
-	sto_query(&query, &sto_db, _flying_planes);
+	sto_query(&query, &sto_db, (sto_filter)_flying_planes);
 
 	int new_plane_flag = 1;
 	new_plane_flag = sto_get(&query, &plane, NULL);
