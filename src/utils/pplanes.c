@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <assert.h>
 #include "storage.h"
 #include "atcd.h"
 
 void print_row(struct atc_plane * plane, char key[STO_KEY_SIZE])
 {
-    printf("Key %*s: %6s\t <%3d, %3d, %3d>\t %d, %d, %d, %c, %d\n",
+    printf("Key %*s: <%4d, %4d, %4d>\t t%d, h%3d, e%3d, s%3d, x%d\n",
             STO_KEY_SIZE,
             key,
-            plane->id,
             plane->x, plane->y, plane->z,
             (int) plane->time,
             plane->heading,
@@ -24,12 +24,17 @@ int main(int argc, char ** argv)
     struct sto_database db;
     struct sto_cursor q;
     struct atc_plane plane;
+    time_t start_time;
+    time_t last_time;
+
     char key[STO_KEY_SIZE];
 
     if (argc != 2) {
         printf("Usage: %s database.\n", argv[0]);
         return -1;
     }
+
+    start_time = time(NULL);
 
     assert(sto_init(&db, argv[1], sizeof(struct atc_plane)) != -1);
 
@@ -43,6 +48,7 @@ int main(int argc, char ** argv)
     
     assert(sto_close(&q) != -1);
 
-    printf("Done.\n");
+    last_time = time(NULL);
+    printf("Done in %ld seconds.\n", last_time - start_time);
     return 0;
 }
