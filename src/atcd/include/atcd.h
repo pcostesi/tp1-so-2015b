@@ -57,7 +57,7 @@ time_t get_time();
 
 int set(enum atc_commands cmd, struct atc_plane plane);
 
-int get_airplanes();
+int get_airplanes(struct atc_plane buffer[]);
 
 
 
