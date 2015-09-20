@@ -12,9 +12,6 @@
 #define MAX_AIRPORTS 2
 #define MAX_PLANES 50
 
-
-//ENUMS & STRUCTS
-
 enum atc_heading { SW=225, W=180, NW=135, N=90, NE=45, E=0, SE=315, S=270 };
 enum atc_status{landed, crashed, flying};
 enum atc_elevation { UP_1 = 10, UP_2 = 20, UP_3 = 30, STRAIGTH = 0, DOWN_1 = -10, DOWN_2 = -20, DOWN_3 = -30 };
@@ -23,13 +20,13 @@ enum atc_commands{speed_up, speed_down, climb, descend, turn_right, turn_left};
 
 struct atc_plane { 
     char id[6];
-    int x; //expressed in mts
-    int y; //expressed in mts
-    int z;//expressed in mts
+    int x; /*expressed in mts*/
+    int y; /*expressed in mts*/
+    int z;/*expressed in mts*/
     time_t time; 
-    enum atc_heading heading; //expressed in cardinal points
-    enum atc_elevation elevation; //expressed in elevation angle
-    char speed; //expressed in m/s
+    enum atc_heading heading; /*expressed in cardinal points*/
+    enum atc_elevation elevation; /*expressed in elevation angle*/
+    char speed; /*expressed in m/s*/
     enum atc_status status;
 };
 

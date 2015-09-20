@@ -42,16 +42,16 @@ void input(int ch){
 		if (ui.cur_plane == -1){
 			if (ch-'0' < state.planes_num){
 				ui.cur_plane = ch-'0';
-				//clear_log();
-				//struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
-				//mvwprintw(cmd_log, 0, 0, "%s %s", "Selected plane",plane.id);
+				/* clear_log();
+				struct atc_plane plane = planes[cur_page*PLANES_PER_PAGE+cur_plane];
+				mvwprintw(cmd_log, 0, 0, "%s %s", "Selected plane",plane.id); */
 			}
 			return;
 		}else if (ui.cur_cmd == -1){
 			if (ch >= '0' && ch <= '6'){
 				ui.cur_cmd = ch-'0';
-				//clear_log();
-				//mvwprintw(cmd_log, 0, 0, "%s %s", "Select command", get_cmdname(cur_cmd));
+				/*clear_log();
+				mvwprintw(cmd_log, 0, 0, "%s %s", "Select command", get_cmdname(cur_cmd)); */
 			}
 			return;
 		}
@@ -122,15 +122,17 @@ void init_UI(void){
 }
 
 void draw_UI(void){
-	wclear(ui.map);
+	int i;
+
 	wclear(ui.plane_list);	
 	wclear(ui.cmds);
+	wclear(ui.map);
 	
-	for (int i = 0; i < state.airports_num; i++){
+	for (i = 0; i < state.airports_num; i++){
 		mvwprintw(ui.map, state.airports[i].y, state.airports[i].x, "@");
 	}
 
-	for (int i = 0; i < state.planes_num; i++){
+	for (i = 0; i < state.planes_num; i++){
 		mvwprintw(ui.map, state.planes[i].y, state.planes[i].x, "+");
 		if (i >= ui.cur_page*PLANES_PER_PAGE && i < PLANES_PER_PAGE*(ui.cur_page+1)){
 			mvwprintw(ui.plane_list, i*2, 0, "%d: %s (%d, %d, %d)", i%PLANES_PER_PAGE, state.planes[i].id, state.planes[i].x, state.planes[i].y, state.planes[i].z);
@@ -152,7 +154,7 @@ void draw_UI(void){
 		}		
 	}
 
-	for (int i = 0; i < CMDS_NUM; i++){
+	for (i = 0; i < CMDS_NUM; i++){
 		mvwprintw(ui.cmds, i, 0, "%d: %s", i, get_cmdname(i));
 		if (ui.cur_cmd != -1){
 			mvwchgat(ui.cmds, ui.cur_cmd, 0, -1, A_REVERSE, 0, NULL);
