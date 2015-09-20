@@ -2,11 +2,11 @@ STD=-std=c99 -pedantic
 WARN=-Wall -g -Werror
 OPT=-O0
 INCLUDES=-I./cli/include -I./srv/include -I./protocol/include \
-	 -I./atcc/include -I./atcd/include -I./storage/include -I. -I
+	 -I./atcc/include -I./atcd/include -I./storage/include -I.
 
 BACKEND?=socket
 TRANSPORTS=socket fifo shmem queue file
-I_BKND=-I./transport/include -I./transport/$(BACKEND)/include
+INCLUDES+=-I./transport/include -I./transport/$(BACKEND)/include -I -iquote
 
 BIN=../bin
 
