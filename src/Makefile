@@ -17,7 +17,8 @@ LINKS=$(foreach lib,$(LIBS),-l$(lib))
 
 TESTSRC=$(wildcard test/*.c)
 ATCCSRC=$(wildcard atcc/*.c)
-ATCDSRC=$(wildcard atcd/*.c) $(wildcard storage/*.c)
+STOSRC=$(wildcard storage/*.c)
+ATCDSRC=$(wildcard atcd/*.c) $(STOSRC)
 CLISRC=$(wildcard cli/*.c)
 SRVSRC=$(wildcard srv/*.c)
 COMMSRC=$(wildcard transport/*.c) $(wildcard protocol/*.c)
@@ -28,6 +29,7 @@ HEADERS=$(shell find . -name *.h)
 
 TESTOBJ=$(TESTSRC:.c=.o)
 ATCCOBJ=$(ATCCSRC:.c=.o)
+STOOBJ=$(STOSRC:.c=.o)
 ATCDOBJ=$(ATCDSRC:.c=.o)
 CLIOBJ=$(CLISRC:.c=.o)
 SRVOBJ=$(SRVSRC:.c=.o)
@@ -78,6 +80,10 @@ run:	$(CLI) $(SRV) $(ATC)
 test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p ${BIN}/test
 	$(CC) $(LDFLAGS) -o ${BIN}/test/storage ./test/storage.o $(ATCDOBJ)
+	
+pplanes:	utils/pplanes.o $(STOOBJ)
+	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^
 
-.PHONY: clean run all $(SRV) $(CLI) test
+
+.PHONY: clean run all $(SRV) $(CLI) test dump
 
