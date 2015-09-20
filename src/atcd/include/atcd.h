@@ -61,7 +61,7 @@ int get_airplanes(struct atc_plane buffer[]);
 
 int atc_init();
 
-static void create_plane();
+void create_plane();
 
 #endif
 
