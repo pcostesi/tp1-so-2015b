@@ -27,9 +27,10 @@ static int _planes_count = 0;
 int calculate_position(struct atc_plane* plane, time_t new_time)
 {
 	int time_dif = new_time - plane->time;
-	int aux = (int)(_sin(plane->elevation) * plane->speed * time_dif + plane->z ) ;
+	int aux = (int)(_cos(plane->elevation) * plane->speed * time_dif + plane->z ) ;
 	if( aux < 0 ){
 		int time_of_crash = new_time - plane->time - ( (aux*(-1))/(_sin(plane->elevation) * plane->speed) );
+		plane->time = time_of_crash;
 		_set_plane_x_y(plane, time_of_crash);
 		_crashed_or_landed(plane);
 		return 0;
@@ -43,14 +44,14 @@ int calculate_position(struct atc_plane* plane, time_t new_time)
 
 static void _set_plane_x_y(struct atc_plane *plane, int time_dif)
 {
-	int aux = (int)(_cos(plane->heading) * plane->speed * time_dif + plane->x ) % MAX_LEN;
+	int aux = ((int)(_cos(plane->heading) * plane->speed * time_dif + plane->x ) ) % MAX_LEN;
 	if( aux < 0 ){
-		aux = MAX_LEN - aux;
+		aux = MAX_LEN + aux;
 	}
 	plane->x = aux;
 	aux = (int)(_sin(plane->heading) * plane->speed * time_dif + plane->y ) % MAX_HEIGHT;
 	if( aux < 0 ){
-		aux = MAX_HEIGHT - aux;
+		aux = MAX_HEIGHT + aux;
 	}
 	plane->y = aux;
 
@@ -187,46 +188,52 @@ time_t get_time()
 /*Return 0 if command was applied/succesfull, -1 if it was not a valid commando or not possible to apply*/
 int set(enum atc_commands cmd, struct atc_plane plane)
 {
-	switch (cmd){
-		case speed_up : if(plane.speed  >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
-							return -1;
-						}
-						else{
-							plane.speed += 14;
-							return sto_set(&sto_db, &plane, plane.id);
-						}
-					break;
-		case speed_down : if( plane.speed <= 42) {  /*minimum plane speed 150km/h expressed in m/s*/
-							return -1;
-						}
-						else{
-							plane.speed -= 14;
-							return sto_set(&sto_db, &plane, plane.id);
-						}
-					break;
-		case climb : if( plane.elevation >= 30) { 
-							return -1;
-						}
-						else{
-							plane.elevation = plane.elevation + 10;
-							return sto_set(&sto_db, &plane, plane.id);
-						}
-					break;
-		case descend : if( plane.elevation <= -30) { 
-							return -1;
-						}
-						else{
-						 	plane.elevation = plane.elevation - 10;
-							return sto_set(&sto_db, &plane, plane.id);
-						}
-					break;
-		case turn_right : 	plane.heading = (plane.heading -45);
-							return sto_set(&sto_db, &plane, plane.id);
-					break;
-		case turn_left: 	plane.heading = (plane.heading +45);
-							return sto_set(&sto_db, &plane, plane.id);
-					break;
-		default: return 0;
+	if(calculate_position( &plane, get_time() ) ) {
+		plane.time = get_time();	
+		switch (cmd){
+			case speed_up : if(plane.speed  >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
+								return -1;
+							}
+							else{
+								plane.speed += 14;
+								return sto_set(&sto_db, &plane, plane.id);
+							}
+						break;
+			case speed_down : if( plane.speed <= 42) {  /*minimum plane speed 150km/h expressed in m/s*/
+								return -1;
+							}
+							else{
+								plane.speed -= 14;
+								return sto_set(&sto_db, &plane, plane.id);
+							}
+						break;
+			case climb : if( plane.elevation == 30) { 
+								return -1;
+							}
+							else{
+								plane.elevation = plane.elevation + 10;
+								return sto_set(&sto_db, &plane, plane.id);
+							}
+						break;
+			case descend : if( plane.elevation == -30) { 
+								return -1;
+							}
+							else{
+							 	plane.elevation = plane.elevation - 10;
+								return sto_set(&sto_db, &plane, plane.id);
+							}
+						break;
+			case turn_right : 	if(plane.heading == 0){
+									plane.heading =360;
+								}
+								plane.heading = (plane.heading -45);
+								return sto_set(&sto_db, &plane, plane.id);
+						break;
+			case turn_left: 	plane.heading = (plane.heading +45) % 360;
+								return sto_set(&sto_db, &plane, plane.id);
+						break;
+			default: return 0;
+		}
 	}
 	return 0;
 }
