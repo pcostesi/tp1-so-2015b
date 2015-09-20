@@ -134,6 +134,11 @@ int get_airports(struct atc_airport buff[])
 	return 2;
 }
 
+void create(void)
+{
+    _create_plane();
+}
+
 //Creates a random plane, does not check if it already exist, because if it does.....it happens
 //Also, chance of having 2 planes with an equal name is: 0.00000284478 which means that one out of every 351520 new planes will 
 //have an already exisitng name plane, therefore we will not consider this case as to avoid acceses to the database.
@@ -223,10 +228,10 @@ int set(enum atc_commands cmd, struct atc_plane plane)
 		case turn_right : 	plane.heading = (plane.heading -45);
 							return sto_set(&sto_db, &plane, plane.id);
 					break;
-		case turn_left : 	plane.heading = (plane.heading +45);
+		case turn_left: 	plane.heading = (plane.heading +45);
 							return sto_set(&sto_db, &plane, plane.id);
 					break;
-		default : return 0;
+		default: return 0;
 	}
 	return 0;
 }
