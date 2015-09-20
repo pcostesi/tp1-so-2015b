@@ -20,7 +20,6 @@ struct atc_state{
 	int airports_num;
 	time_t cur_time;
 	time_t tick_time;
-	struct tm *loctime;
 };
 
 struct atc_ui{
