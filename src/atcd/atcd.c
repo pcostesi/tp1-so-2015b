@@ -15,7 +15,6 @@ static void _crashed_or_landed(struct atc_plane *plane);
 static int _in_da_zone(struct atc_plane *plane);
 static double _sin(int angle);
 static float _cos(int angle);
-static void _create_plane();
 static int _rand_number();
 static int _rand_capital_letter();
 static int _flying_planes(struct atc_plane plane, char name[6]);
@@ -134,15 +133,11 @@ int get_airports(struct atc_airport buff[])
 	return 2;
 }
 
-void create(void)
-{
-    _create_plane();
-}
 
 //Creates a random plane, does not check if it already exist, because if it does.....it happens
 //Also, chance of having 2 planes with an equal name is: 0.00000284478 which means that one out of every 351520 new planes will 
 //have an already exisitng name plane, therefore we will not consider this case as to avoid acceses to the database.
-static void _create_plane()
+void create_plane()
 {
 	if(_planes_count == MAX_PLANES){
 		return;
@@ -268,4 +263,13 @@ int get_airplanes(struct atc_plane buffer[])
 static int _flying_planes(struct atc_plane plane, char name[6])
 {
 	return plane.status == flying;
+}
+
+
+//Initializes stuff
+
+int atc_init()
+{
+	return sto_init(&sto_db, "Planes", sizeof(struct atc_plane)) &&	create_plane() ;
+
 }

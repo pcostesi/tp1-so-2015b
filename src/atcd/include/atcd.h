@@ -59,7 +59,9 @@ int set(enum atc_commands cmd, struct atc_plane plane);
 
 int get_airplanes(struct atc_plane buffer[]);
 
+int atc_init();
 
+static void create_plane();
 
 #endif
 
