@@ -1,6 +1,5 @@
 #include "storage.h"
 
-#include <fcntl.h>
 #include <stddef.h>
 #include <string.h>
 #include <sys/stat.h>
