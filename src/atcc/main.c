@@ -97,7 +97,7 @@ void init_UI(void){
 	initscr();
 	noecho();
 	keypad(ui.cmd_log, TRUE);
-	nodelay(ui.cmd_log, FALSE);
+	halfdelay(1);
 
 	ui.brd_map = newwin(MAP_HEIGHT+BORDER, MAP_WIDTH+BORDER, 0, 0);
 	ui.brd_plane_list = newwin(LIST_HEIGHT+BORDER, LIST_WIDTH+BORDER, 0, MAP_WIDTH+BORDER);
@@ -166,8 +166,7 @@ void draw_UI(void){
 
 	wrefresh(ui.map);
 	wrefresh(ui.cmds);
-	wrefresh(ui.plane_list);
-	wrefresh(ui.cmd_log);
+	wrefresh(ui.plane_list);	
 }
 
 void clear_UI(void){
