@@ -136,7 +136,7 @@ void draw_UI(void){
 	}
 
 	for (i = 0; i < state.planes_num; i++){
-		mvwprintw(ui.map, (state.planes[i].y/(float)MAX_HEIGHT)*(MAP_HEIGHT), (state.planes[i].x/(float)MAX_LEN)*(MAP_WIDTH), "+");
+		mvwprintw(ui.map, (state.planes[i].y/(float)MAX_HEIGHT)*(MAP_HEIGHT), (state.planes[i].x/(float)MAX_LEN)*(MAP_WIDTH), "%d", i);
 		if (i >= ui.cur_page*PLANES_PER_PAGE && i < PLANES_PER_PAGE*(ui.cur_page+1)){
 			mvwprintw(ui.plane_list, i*2, 0, "%d: %s (%d, %d, %d)", i%PLANES_PER_PAGE, state.planes[i].id, state.planes[i].x, state.planes[i].y, state.planes[i].z);
 			mvwchgat(ui.plane_list, i*2, 0, -1, A_BOLD, 0, NULL);
