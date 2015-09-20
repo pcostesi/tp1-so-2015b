@@ -143,17 +143,7 @@ void draw_UI(void){
 			if (ui.cur_plane >= 0 && i == ui.cur_page*PLANES_PER_PAGE+ui.cur_plane){
 				mvwchgat(ui.plane_list, (i%PLANES_PER_PAGE)*2, 0, -1, A_REVERSE, 0, NULL);
 			}
-			switch (state.planes[i].status){
-				case landed:
-					mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "Landed");
-					break;
-				case crashed:
-					mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "Crashed");
-					break;
-				case flying:
-					mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "Flying");
-					break;
-			}
+			mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "S:%s E:%d V:%d H:%d", get_status(state.planes[i].status), state.planes[i].elevation, state.planes[i].speed, state.planes[i].heading);
 		}		
 	}
 
@@ -188,6 +178,17 @@ char *get_cmdname(int cmd){
 			return "Turn right";
 		default:
 			return "Turn left";
+	}
+}
+
+char *get_status(enum atc_status status){
+	switch (status){
+		case landed:
+			return "Landed";
+		case crashed:	
+			return "Crashed";
+		default:
+			return "Flying";
 	}
 }
 

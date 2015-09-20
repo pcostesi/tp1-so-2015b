@@ -2,7 +2,7 @@
 #define __ATCC_H 1
 
 #define LIST_HEIGHT 20
-#define LIST_WIDTH 29
+#define LIST_WIDTH 30
 #define LIST_CMDS 6
 #define LOG_HEIGHT 1
 #define BORDER 2
@@ -38,6 +38,7 @@ void dispose_UI();
 void clear_UI();
 void input(int ch);
 char *get_cmdname(int cmd);
+char *get_status(enum atc_status status);
 
 void join_game(void);
 void leave_game(void);
