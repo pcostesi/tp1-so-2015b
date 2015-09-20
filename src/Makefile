@@ -5,12 +5,16 @@ INCLUDES=-I./cli/include -I./srv/include -I./protocol/include \
 	 -I./atcc/include -I./atcd/include -I./storage/include -I.
 
 BACKEND?=socket
+BACKEND:=$(shell echo $(BACKEND) | tr A-Z a-z)
+BACKEND_UPPER=$(shell echo $(BACKEND) | tr a-z A-Z)
+
 TRANSPORTS=socket fifo shmem queue file
 INCLUDES+=-I./transport/include -I./transport/$(BACKEND)/include -I -iquote
 
 BIN=../bin
 
-FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(INCLUDES) $(I_BKND) -fPIC
+PPV=-DBACKEND_$(BACKEND_UPPER)
+FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(PPV) $(INCLUDES) $(I_BKND) -fPIC
 LDFLAGS+=-lm
 LIBS= ncurses m
 LINKS=$(foreach lib,$(LIBS),-l$(lib))
