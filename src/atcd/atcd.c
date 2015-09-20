@@ -188,8 +188,8 @@ time_t get_time()
 /*Return 0 if command was applied/succesfull, -1 if it was not a valid commando or not possible to apply*/
 int set(enum atc_commands cmd, struct atc_plane plane)
 {
-	if(calculate_position( &plane, get_time() ) ) {
-		plane.time = get_time();	
+	plane.time = get_time();
+	if(calculate_position( &plane, plane.time ) ) {
 		switch (cmd){
 			case speed_up : if(plane.speed  >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
 								return -1;
