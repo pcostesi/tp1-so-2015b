@@ -2,6 +2,8 @@
 #define __STO_H 1
 
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #define STO_MAX_FILENAME_SIZE 128
 #define STO_MAX_NAME_LENGTH 64
