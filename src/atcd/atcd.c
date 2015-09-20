@@ -16,7 +16,7 @@ static double _sin(int angle);
 static float _cos(int angle);
 static int _rand_number();
 static int _rand_capital_letter();
-static int _flying_planes(struct atc_plane * plane, char name[6]);
+static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH]);
 
 static struct sto_database sto_db;
 static int _planes_count = 0;
@@ -141,7 +141,7 @@ have an already exisitng name plane, therefore we will not consider this case as
 void create_plane()
 {
 	struct atc_plane new_plane;
-	char id[6];
+	char id[ATCD_ID_LENGTH];
 	if(_planes_count == MAX_PLANES){
 		return;
 	}
@@ -153,7 +153,7 @@ void create_plane()
 	id[4] = _rand_number();
 	id[5] = _rand_capital_letter();
 
-	memcpy(new_plane.id, id, 6);
+	memcpy(new_plane.id, id, ATCD_ID_LENGTH);
 	new_plane.x = rand()%MAX_LEN;
 	new_plane.y = rand()%MAX_HEIGHT; 
 	new_plane.z	= rand()%9000 + 1000; /*//starting altitude, expressed in m*/
@@ -267,7 +267,7 @@ int get_airplanes(struct atc_plane buffer[])
 
 
 /*Auxiliary function to start a query*/
-static int _flying_planes(struct atc_plane * plane, char name[6])
+static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH])
 {
 	return plane->status == flying;
 }
