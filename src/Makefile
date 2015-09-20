@@ -1,4 +1,4 @@
-STD=-std=c99 -pedantic
+STD=-pedantic
 WARN=-Wall -g -Werror
 OPT=-O0
 INCLUDES=-I./cli/include -I./srv/include -I./protocol/include \
