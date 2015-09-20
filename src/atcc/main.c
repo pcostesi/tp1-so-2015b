@@ -62,14 +62,13 @@ void input(int ch){
 		if (ui.cur_page > 0){
 			ui.cur_page--;
 			clear_UI();
-			mvwprintw(ui.cmd_log, 0, 0, "Moved to page %d", ui.cur_page);
+			mvwprintw(ui.cmd_log, 0, 0, "Moved to page %d", ui.cur_page+1);
 		}
 	}else if (ch == 65){
-		
-		if (ui.cur_page+1 < state.planes_num/PLANES_PER_PAGE){
+		if (ui.cur_page+1 < state.planes_num/(float)PLANES_PER_PAGE){
 			ui.cur_page++;
 			clear_UI();
-			mvwprintw(ui.cmd_log, 0, 0, "Moved to page %d", ui.cur_page);
+			mvwprintw(ui.cmd_log, 0, 0, "Moved to page %d", ui.cur_page+1);
 		}
 	}else if (ch == '\n' && ui.cur_cmd != -1 && ui.cur_plane != -1){
 		struct atc_plane plane = state.planes[ui.cur_page*PLANES_PER_PAGE+ui.cur_plane];
