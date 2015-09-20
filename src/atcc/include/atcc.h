@@ -18,6 +18,9 @@ struct atc_state{
 	int planes_num;
 	struct atc_airport airports[MAX_AIRPORTS];
 	int airports_num;
+	time_t cur_time;
+	time_t tick_time;
+	struct tm *loctime;
 };
 
 struct atc_ui{
@@ -39,6 +42,7 @@ char *get_cmdname(int cmd);
 void join_game(void);
 void leave_game(void);
 void update_state(void);
+void init_time(void);
 time_t get_time(void);
 
 #endif

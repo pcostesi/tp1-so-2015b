@@ -12,6 +12,7 @@ static struct atc_ui ui;
 int main(int argc, char ** argv)
 {
 	init_UI();
+	init_time();
 	while(1){
 		update_state();
 		draw_UI();
@@ -21,9 +22,18 @@ int main(int argc, char ** argv)
     return 0;
 }
 
+void init_time(void){
+	state.tick_time = time(NULL);
+}
+
 void update_state(void){
 	state.planes_num = get_airplanes(state.planes);
 	state.airports_num = get_airports(state.airports);
+	state.cur_time = time(NULL);
+	if (difftime(state.cur_time, state.tick_time) > 20){
+		state.tick_time = state.cur_time;
+		create_plane();
+	}
 }
 
 void input(int ch){
