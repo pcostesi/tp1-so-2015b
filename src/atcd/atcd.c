@@ -126,8 +126,8 @@ static float _cos(int angle)
 
 int get_airports(struct atc_airport buff[])
 {
-	struct atc_airport aux = {10, 10};
-	struct atc_airport aux2 = {20, 20};
+	struct atc_airport aux = {1000, 1000};
+	struct atc_airport aux2 = {2000, 2000};
 	buff[0] = aux;
 	buff[1] = aux2;
 	return 2;
