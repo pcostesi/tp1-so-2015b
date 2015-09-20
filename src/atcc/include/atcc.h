@@ -2,7 +2,7 @@
 #define __ATCC_H 1
 
 #define LIST_HEIGHT 20
-#define LIST_WIDTH 20
+#define LIST_WIDTH 29
 #define LIST_CMDS 7
 #define LOG_HEIGHT 1
 #define BORDER 2
