@@ -57,3 +57,22 @@ Combo table:
 |  X   |  X  |    shmem     |     |            |  atcc-shmem    |
 |      |     |    shmem     |  X  |     X      |  atcd-shemm    |
 
+
+
+## Compilation Details
+
+Make will re-compile the binaries when the follwing files get updated:
+
+|     Condition     | atc | atcc-${BACKEND} | atcd-${BACKEND} |
+|:-----------------:|----:|----------------:|----------------:|
+| Any \*.h          |  X  |       X         |        X        |
+| atcc/\*.c         |  X  |       X         |                 |
+| atcd/\*.c         |  X  |                 |        X        |
+| transport/\*.c    |     |       X         |        X        |
+| transport/\*\*.c  |     |       X         |        X        |
+| protocol/\*.c     |     |       X         |        X        |
+| cli/\*.c          |     |       X         |                 |
+| srv/\*.c          |     |                 |        X        |
+| storage/\*.c      |  X  |                 |        X        |
+
+Additionally, _Make_ will set these preprocessor variables: `ATC_BACKEND_$(BACKEND_IN_UPPERCASE)` and `ATC_BACKEND=$(BACKEND_IN_UPPERCASE)`.
