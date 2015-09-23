@@ -90,7 +90,6 @@ static void _wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLA
     ptr = _get_chr(ptr, (char *) &plane->heading);
     ptr = _get_int(ptr, &plane->speed);
     ptr = _get_chr(ptr, (char *) &plane->status);
-
 }
 
 
