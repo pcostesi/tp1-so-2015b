@@ -7,8 +7,8 @@
 
 #define ATCP_PLANE_MSG_LEN (ATCD_ID_LENGTH + 4 * sizeof(uint32_t) + 2 * sizeof(char))
 
-static void _plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN]);
-static void _wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN]);
+void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN]);
+void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN]);
 
 unsigned char * _snd_strn(unsigned char * ptr, char * str, size_t len);
 unsigned char * _snd_chr(unsigned char * ptr, char c);
@@ -63,7 +63,7 @@ unsigned char * _get_int(unsigned char * ptr, int * x)
 }
 
 
-static void _plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN])
+void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN])
 {
     unsigned char * ptr = wire;
     assert(plane != NULL);
@@ -78,7 +78,7 @@ static void _plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLA
 }
 
 
-static void _wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN])
+void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN])
 {
     unsigned char * ptr = wire;
     assert(plane != NULL);
