@@ -39,21 +39,21 @@ enum atc_conn_type {
 
 
 struct atc_req {
-    enum atc_req_type;
+    enum atc_req_type type;
     char id[ATCD_ID_LENGTH];
 };
 
 
 struct atc_res {
-    enum atc_res_type;
+    enum atc_res_type type;
     union {
         unsigned int airports;
         unsigned int planes;
         int error_code;
     } len;
     union {
-        struct atc_plane[MAX_PLANES] planes;
-        struct atc_plane[MAX_AIRPORTS] airports;
+        struct atc_plane planes[MAX_PLANES];
+        struct atc_plane airports[MAX_AIRPORTS];
     } msg;
 };
 
