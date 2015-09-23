@@ -3,12 +3,7 @@
 #include <string.h>
 
 #include "protocol.h"
-#include "atcd.h"
-
-#define ATCP_PLANE_MSG_LEN (ATCD_ID_LENGTH + 4 * sizeof(uint32_t) + 2 * sizeof(char))
-
-void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN]);
-void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN]);
+#include "serialize.h"
 
 unsigned char * _snd_strn(unsigned char * ptr, char * str, size_t len);
 unsigned char * _snd_chr(unsigned char * ptr, char c);
@@ -91,5 +86,4 @@ void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_M
     ptr = _get_int(ptr, &plane->speed);
     ptr = _get_chr(ptr, (char *) &plane->status);
 }
-
 
