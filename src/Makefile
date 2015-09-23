@@ -1,6 +1,6 @@
-STD=-pedantic
-WARN=-Wall -g -Werror
-OPT=-O0
+STD=-pedantic -pedantic-errors
+WARN=-Wall -Werror -Wunused-macros
+OPT=-O0 -g -fPIC -pipe
 INCLUDES=-I./cli/include -I./srv/include -I./protocol/include \
 	 -I./atcc/include -I./atcd/include -I./storage/include -I.
 
@@ -13,8 +13,8 @@ INCLUDES+=-I./transport/include -I./transport/$(BACKEND)/include -I -iquote
 
 BIN=../bin
 
-PPV=-DBACKEND_$(BACKEND_UPPER)
-FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(PPV) $(INCLUDES) $(I_BKND) -fPIC
+PPFLAGS=-DCOMM_BACKEND_$(BACKEND_UPPER)=1 -DCOMM_BACKEND=$(BACKEND)
+FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(PPFLAGS) $(INCLUDES)
 LDFLAGS+=-lm
 LIBS= ncurses m
 LINKS=$(foreach lib,$(LIBS),-l$(lib))
@@ -48,9 +48,12 @@ CLI=${ATC}c
 SRV_BIN=${BIN}/$(SRV)-$(BACKEND)
 CLI_BIN=${BIN}/$(CLI)-$(BACKEND)
 ATC_BIN=${BIN}/$(ATC)
+DUMPDB=${BIN}/pplanes
+
+.DEFAULT_GOAL := atc
 
 # Keep `all` as the first target (here) or I'll kill you.
-all:	$(CLI) $(SRV) $(ATC)
+all:	$(CLI) $(SRV) $(ATC) tools
 
 %.o: %.c ${HEADERS}
 	$(CC) $(FINAL_CFLAGS) -c $< -o $@
@@ -85,9 +88,10 @@ test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p ${BIN}/test
 	$(CC) $(LDFLAGS) -o ${BIN}/test/storage ./test/storage.o $(ATCDOBJ)
 	
-pplanes:	utils/pplanes.o $(STOOBJ)
+$(DUMPDB):	utils/pplanes.o $(STOOBJ)
 	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^
 
+tools: $(DUMPDB) test
 
-.PHONY: clean run all $(SRV) $(CLI) test dump
+.PHONY: clean run all $(SRV) $(CLI) test tools
 
