@@ -50,7 +50,7 @@ CLI_BIN=${BIN}/$(CLI)-$(BACKEND)
 ATC_BIN=${BIN}/$(ATC)
 DUMPDB=${BIN}/pplanes
 
-.DEFAULT_GOAL := atc
+.DEFAULT_GOAL := all
 
 # Keep `all` as the first target (here) or I'll kill you.
 all:	$(CLI) $(SRV) $(ATC) tools
