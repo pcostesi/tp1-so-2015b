@@ -69,8 +69,8 @@ int atc_connect(struct atc_addr * addr);
 int atc_listen(struct atc_addr * addr);
 int atc_close(struct atc_addr * addr);
 
-int atc_send(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
-int atc_recv(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
+int atc_request(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
+int atc_reply(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
 
 int atc_sendbytes(struct atc_addr * addr, void * buffer, size_t bytes);
 int atc_recvbytes(struct atc_addr * addr, void * buffer, size_t bytes);

@@ -43,8 +43,6 @@ int atcd_test(void);
 
 void atc_new_game(void);
 
-struct atc_plane new_plane(void);
-
 time_t get_time(void);
 
 void blip(void);
@@ -53,7 +51,7 @@ int get_airports(struct atc_airport ports[]);
 
 time_t get_time(void);
 
-int set(enum atc_commands cmd, struct atc_plane plane);
+int set(enum atc_commands cmd, struct atc_plane *plane);
 
 int get_airplanes(struct atc_plane buffer[]);
 

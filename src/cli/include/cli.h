@@ -1,6 +1,8 @@
 #ifndef __ATCD_H
 #define __ATCD_H 1
 
+#include "protocol.h"
+
 
 
 /*Function Headers*/

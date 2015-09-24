@@ -186,51 +186,51 @@ time_t get_time()
 
 
 /*Return 0 if command was applied/succesfull, -1 if it was not a valid commando or not possible to apply*/
-int set(enum atc_commands cmd, struct atc_plane plane)
+int set(enum atc_commands cmd, struct atc_plane *plane)
 {
-	plane.time = get_time();
-	if(calculate_position( &plane, plane.time ) ) {
+	plane->time = get_time();
+	if(calculate_position( plane, plane->time ) ) {
 		switch (cmd){
-			case speed_up : if(plane.speed  >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
+			case speed_up : if(plane->speed  >= 280) { /*maximum plane speed 1000km/h expressed in 28m/s*/
 								return -1;
 							}
 							else{
-								plane.speed += 14;
-								return sto_set(&sto_db, &plane, plane.id);
+								plane->speed += 14;
+								return sto_set(&sto_db, plane, plane->id);
 							}
 						break;
-			case speed_down : if( plane.speed <= 42) {  /*minimum plane speed 150km/h expressed in m/s*/
+			case speed_down : if( plane->speed <= 42) {  /*minimum plane speed 150km/h expressed in m/s*/
 								return -1;
 							}
 							else{
-								plane.speed -= 14;
-								return sto_set(&sto_db, &plane, plane.id);
+								plane->speed -= 14;
+								return sto_set(&sto_db, plane, plane->id);
 							}
 						break;
-			case climb : if( plane.elevation == 30) { 
+			case climb : if( plane->elevation == 30) { 
 								return -1;
 							}
 							else{
-								plane.elevation = plane.elevation + 10;
-								return sto_set(&sto_db, &plane, plane.id);
+								plane->elevation = plane->elevation + 10;
+								return sto_set(&sto_db, plane, plane->id);
 							}
 						break;
-			case descend : if( plane.elevation == -30) { 
+			case descend : if( plane->elevation == -30) { 
 								return -1;
 							}
 							else{
-							 	plane.elevation = plane.elevation - 10;
-								return sto_set(&sto_db, &plane, plane.id);
+							 	plane->elevation = plane->elevation - 10;
+								return sto_set(&sto_db, plane, plane->id);
 							}
 						break;
-			case turn_right : 	if(plane.heading == 0){
-									plane.heading =360;
+			case turn_right : 	if(plane->heading == 0){
+									plane->heading =360;
 								}
-								plane.heading = (plane.heading -45);
-								return sto_set(&sto_db, &plane, plane.id);
+								plane->heading = (plane->heading -45);
+								return sto_set(&sto_db, plane, plane->id);
 						break;
-			case turn_left: 	plane.heading = (plane.heading +45) % 360;
-								return sto_set(&sto_db, &plane, plane.id);
+			case turn_left: 	plane->heading = (plane->heading +45) % 360;
+								return sto_set(&sto_db, plane, plane->id);
 						break;
 			default: return 0;
 		}
