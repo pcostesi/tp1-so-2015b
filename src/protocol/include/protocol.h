@@ -39,21 +39,21 @@ enum atc_conn_type {
 
 
 struct atc_req {
-    enum atc_req_type;
+    enum atc_req_type type;
     char id[ATCD_ID_LENGTH];
 };
 
 
 struct atc_res {
-    enum atc_res_type;
+    enum atc_res_type type;
     union {
         unsigned int airports;
         unsigned int planes;
         int error_code;
     } len;
     union {
-        struct atc_plane[MAX_PLANES] planes;
-        struct atc_plane[MAX_AIRPORTS] airports;
+        struct atc_plane planes[MAX_PLANES];
+        struct atc_plane airports[MAX_AIRPORTS];
     } msg;
 };
 
@@ -65,9 +65,13 @@ struct atc_addr {
     } conn;
 };
 
-/* TODO: Add handshake, handoff, sendmsg, receivemsg */
+int atc_connect(struct atc_addr * addr);
+int atc_listen(struct atc_addr * addr);
+int atc_close(struct atc_addr * addr);
 
-int atc_handshake(struct atc_addr * addr);
-int atc_handoff(struct atc_addr * addr);
+int atc_send(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
+int atc_recv(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
 
+int atc_sendbytes(struct atc_addr * addr, void * buffer, size_t bytes);
+int atc_recvbytes(struct atc_addr * addr, void * buffer, size_t bytes);
 #endif
