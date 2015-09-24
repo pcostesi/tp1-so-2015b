@@ -248,7 +248,7 @@ int get_airplanes(struct atc_plane buffer[])
 	int count = 0;
 	int new_plane_flag = 1;
 	struct sto_cursor query;
-	sto_query(&query, &sto_db, (sto_filter)_flying_planes);
+	sto_query(&query, &sto_db, (sto_filter)_flying_planes, NULL);
 
 	new_plane_flag = sto_get(&query, &plane, NULL);
 
@@ -267,7 +267,7 @@ int get_airplanes(struct atc_plane buffer[])
 
 
 /*Auxiliary function to start a query*/
-static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH])
+static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH], void * params)
 {
 	return plane->status == flying;
 }

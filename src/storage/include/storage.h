@@ -9,7 +9,7 @@
 #define STO_MAX_NAME_LENGTH 64
 #define STO_KEY_SIZE 16
 
-typedef int (* sto_filter)(void * data, char key[STO_KEY_SIZE]);
+typedef int (* sto_filter)(void * data, char key[STO_KEY_SIZE], void * params);
 typedef int (* sto_fn)(void * data, void * extra, char key[STO_KEY_SIZE]);
 
 struct sto_database {
@@ -30,8 +30,9 @@ struct sto_cursor {
 
 int sto_init(struct sto_database * conn, char * name, size_t data_type_size);
 int sto_close(struct sto_cursor * q);
-int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filter);
+int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filter, void * params);
 int sto_get(struct sto_cursor * q, void * row, char key[STO_KEY_SIZE]);
+int sto_get_by_id(struct sto_database * db, void * row, char key[STO_KEY_SIZE]);
 int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE]);
 int sto_dispose(struct sto_database * conn);
 int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra);

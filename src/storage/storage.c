@@ -80,6 +80,23 @@ int sto_get(struct sto_cursor * q, void * row, char key[STO_KEY_SIZE])
     return 0;
 }
 
+int sto_get_by_id(struct sto_database * db, void * row, char key[STO_KEY_SIZE])
+{
+    struct sto_cursor q;
+    char tmp_key[STO_KEY_SIZE];
+    int res = 0;
+    strncpy(tmp_key, key, STO_KEY_SIZE);
+
+    sto_query(db, &q, (sto_filter) _sto_key_equals, key);
+    res = sto_get(&q, row, tmp_key);
+    if (res == -1) {
+        sto_close(&q);
+        return -1;
+    }
+    sto_close(&q);
+    return res;
+}
+
 int sto_key_empty(char key[STO_KEY_SIZE])
 {
     char empty[STO_KEY_SIZE] = {0};
@@ -94,7 +111,7 @@ int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE]
     int key_len = 0;
     int bytes_written = 0;
 
-    if (sto_query(&q, conn, NULL) == -1) {
+    if (sto_query(&q, conn, NULL, NULL) == -1) {
         return -1;
     }
 
@@ -173,9 +190,14 @@ int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra)
 
 /* Helper functions and other dragons */
 
-static int _noop_cmp(void * v, char key[STO_KEY_SIZE])
+static int _noop_cmp(void * v, char key[STO_KEY_SIZE], void * unused)
 {
     return 1;
+}
+
+static int _sto_key_equals(void * v, char key[STO_KEY_SIZE], void * tmp_key)
+{
+    return strncmp(key, ) != 0;
 }
 
 static int _fetch_next_record(struct sto_cursor * q, void * buffer,
