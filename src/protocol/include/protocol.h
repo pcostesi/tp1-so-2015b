@@ -58,6 +58,7 @@ struct atc_res {
     } msg;
 };
 
+
 struct atc_addr {
     enum atc_conn_type type;
     union {
@@ -66,13 +67,21 @@ struct atc_addr {
     } conn;
 };
 
-int atc_connect(struct atc_addr * addr);
-int atc_listen(struct atc_addr * addr);
-int atc_close(struct atc_addr * addr);
 
-int atc_send(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
-int atc_recv(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
+struct atc_conn {
+    struct atc_addr addr;
+    struct atc_req req;
+    struct atc_res res;
+};
 
-int atc_sendbytes(struct atc_addr * addr, void * buffer, size_t bytes);
-int atc_recvbytes(struct atc_addr * addr, void * buffer, size_t bytes);
+
+typedef int (*atc_reply_handler)(struct atc_conn * conn);
+
+int atc_connect(struct atc_conn * conn);
+int atc_listen(struct atc_conn * conn);
+int atc_close(struct atc_conn * conn);
+
+int atc_request(struct atc_conn * conn);
+int atc_reply(struct atc_conn * conn, atc_reply_handler handler);
+
 #endif
