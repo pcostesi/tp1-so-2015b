@@ -57,7 +57,7 @@ unsigned char * _get_int(unsigned char * ptr, int * x)
 }
 
 
-void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN])
+void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
 {
     unsigned char * ptr = wire;
     assert(plane != NULL);
@@ -72,7 +72,7 @@ void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_M
 }
 
 
-void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_PLANE_MSG_LEN])
+void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
 {
     unsigned char * ptr = wire;
     assert(plane != NULL);
