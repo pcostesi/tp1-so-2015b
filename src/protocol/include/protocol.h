@@ -1,6 +1,7 @@
 #ifndef _ATC_PROTO
 #define _ATC_PROTO 1
 
+#include <netinet/in.h>
 #include "atcd.h"
 
 enum atc_req_type {

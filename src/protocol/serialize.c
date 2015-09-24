@@ -1,4 +1,3 @@
-#include <netinet/in.h>
 #include <assert.h>
 #include <string.h>
 
