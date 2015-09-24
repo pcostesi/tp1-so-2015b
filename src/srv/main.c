@@ -68,6 +68,7 @@ int atc_reply_handler(struct atc_conn conn){
 	enum atc_req_type req_type = conn.req.type;
 	switch (req_type){
 		case atc_speed_up:
+		set(speed_down, conn)
 		break;
     	case atc_speed_down:
     	break;

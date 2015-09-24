@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-struct list{
+struct listener_list{
 	listener_node head;
 	listener_node tail;
 };
