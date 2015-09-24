@@ -54,7 +54,7 @@ struct atc_res {
     } len;
     union {
         struct atc_plane planes[MAX_PLANES];
-        struct atc_plane airports[MAX_AIRPORTS];
+        struct atc_airport airports[MAX_AIRPORTS];
     } msg;
 };
 
