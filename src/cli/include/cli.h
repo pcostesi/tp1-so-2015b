@@ -5,7 +5,14 @@
 
 /*Function Headers*/
 
+int start_cli();
 
+int close_cli();
 
+int get_airports(void);
+
+void create_plane(void);
+
+int set(enum atc_command);
 
 #endif
