@@ -41,25 +41,25 @@ int calculate_position(struct atc_plane* , time_t);
 
 int atcd_test(void);
 
-void atc_new_game();
+void atc_new_game(void);
 
-struct atc_plane new_plane();
+struct atc_plane new_plane(void);
 
-time_t get_time();
+time_t get_time(void);
 
-void blip();
+void blip(void);
 
 int get_airports(struct atc_airport ports[]);
 
-time_t get_time();
+time_t get_time(void);
 
 int set(enum atc_commands cmd, struct atc_plane plane);
 
 int get_airplanes(struct atc_plane buffer[]);
 
-int atc_init();
+int atc_init(void);
 
-void create_plane();
+void create_plane(void);
 
 #endif
 
