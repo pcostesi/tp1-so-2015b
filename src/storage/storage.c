@@ -16,7 +16,8 @@ static int _acquire_r_lock(struct flock * lock, int fd, int pos, int size);
 static int _acquire_w_lock(struct flock * lock, int fd, int pos, int size);
 static int _release_lock(struct flock * lock, int fd);
 static int _fetch_next_record(struct sto_cursor * q, void * buffer, char key[STO_KEY_SIZE]);
-static int _noop_cmp(void * v, char key[STO_KEY_SIZE]);
+static int _get_by_id(void * v, char key[STO_KEY_SIZE], void * orig);
+static int _noop_cmp(void * v, char key[STO_KEY_SIZE], void * params);
 
 /* Public API */
 
@@ -33,7 +34,7 @@ int sto_init(struct sto_database * conn, char * name, size_t data_type_size)
     return 0;
 }
 
-int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filter)
+int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filter, void * params)
 {
     if (q == NULL || conn == NULL) {
         return -1;
@@ -51,6 +52,7 @@ int sto_query(struct sto_cursor * q, struct sto_database * conn, sto_filter filt
     q->database = conn;
     q->filter = filter;
     q->cursor = 0;
+    q->params = params;
     lseek(q->fd, 0, SEEK_SET);
     return 0;
 }
@@ -72,12 +74,30 @@ int sto_get(struct sto_cursor * q, void * row, char key[STO_KEY_SIZE])
         if (res == -1) {
             return -1;
         }
-        if (q->filter(row, key)) {
+        if (q->filter(row, key, q->params)) {
             return res;
         }
     }
     _release_lock(&q->zone_lock, q->fd);
     return 0;
+}
+
+int sto_get_by_id(struct sto_database * db, void * row, char key[STO_KEY_SIZE])
+{
+    struct sto_cursor q;
+    int res;
+    char tmp_key[STO_KEY_SIZE];
+
+    if(sto_query(&q, db, (sto_filter)_get_by_id, key) == -1) {
+        return -1;
+    }
+    res = sto_get(&q, row, tmp_key);
+    if (res == -1) {
+        sto_close(&q);
+        return -1;
+    }
+    sto_close(&q);
+    return res;
 }
 
 int sto_key_empty(char key[STO_KEY_SIZE])
@@ -94,7 +114,7 @@ int sto_set(struct sto_database * conn, void * row, const char key[STO_KEY_SIZE]
     int key_len = 0;
     int bytes_written = 0;
 
-    if (sto_query(&q, conn, NULL) == -1) {
+    if (sto_query(&q, conn, NULL, NULL) == -1) {
         return -1;
     }
 
@@ -173,9 +193,14 @@ int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra)
 
 /* Helper functions and other dragons */
 
-static int _noop_cmp(void * v, char key[STO_KEY_SIZE])
+static int _noop_cmp(void * v, char key[STO_KEY_SIZE], void * params)
 {
     return 1;
+}
+
+static int _get_by_id(void * v, char key[STO_KEY_SIZE], void * orig)
+{
+    return strncmp(key, orig, STO_KEY_SIZE) != 0;
 }
 
 static int _fetch_next_record(struct sto_cursor * q, void * buffer,
