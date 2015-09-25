@@ -193,10 +193,12 @@ int sto_when(struct sto_cursor * q, sto_fn when, void * buffer, void * extra)
 
 /* Helper functions and other dragons */
 
+
 static int _noop_cmp(void * v, char key[STO_KEY_SIZE], void * params)
 {
     return 1;
 }
+
 
 static int _get_by_id(void * v, char key[STO_KEY_SIZE], void * orig)
 {
