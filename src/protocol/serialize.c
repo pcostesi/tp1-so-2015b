@@ -27,8 +27,9 @@ unsigned char * _snd_chr(unsigned char * ptr, char c)
 
 unsigned char * _snd_int(unsigned char * ptr, int x)
 {
+    uint32_t number;
     assert(ptr != NULL);
-    uint32_t number = htonl(x);
+    number = htonl(x);
     memcpy(ptr, &number, sizeof(number));
     return ptr + sizeof(number);
 }
