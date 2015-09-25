@@ -75,42 +75,42 @@ void reply_handler(struct atc_conn * conn){
 	switch (conn->req.type){
 		case atc_speed_up:
 		response.type = atc_ack;
-    	if (set(speed_down, conn->req.plane) == -1){
+    	if (set(speed_down, &(conn->req.plane)) == -1){
     		response.type = atc_err;
     		response.msg.error_code = -1;
     	}
 		break;
     	case atc_speed_down:
     	response.type = atc_ack;
-    	if(set(speed_down, conn->req.plane) == -1){
+    	if(set(speed_down, &(conn->req.plane)) == -1){
     		response.type = atc_err;
     		response.msg.error_code = -1;
     	}
     	break;
     	case atc_turn_left:
     	response.type = atc_ack;
-    	if(set(turn_left, conn->req.plane) == -1){
+    	if(set(turn_left, &(conn->req.plane)) == -1){
     		response.type = atc_err;
     		response.msg.error_code = -1;
     	}
     	break;
     	case atc_turn_right:
     	response.type = atc_ack;
-    	if(set(turn_right, conn->req.plane) == -1){
+    	if(set(turn_right, &(conn->req.plane)) == -1){
     		response.type = atc_err;
     		response.msg.error_code = -1;
     	}
     	break;
     	case atc_ascend:
     	response.type = atc_ack;
-    	if (set(climb, conn->req.plane) == -1){
+    	if (set(climb, &(conn->req.plane)) == -1){
     		response.type = atc_err;
     		response.msg.error_code = -1;
     	}
     	break;
     	case atc_descend:
     	response.type = atc_ack;
-    	if(set(descend, conn->req.plane) == -1){
+    	if(set(descend, &(conn->req.plane)) == -1){
     		response.type = atc_err;
     		response.msg.error_code = -1;
     	}
