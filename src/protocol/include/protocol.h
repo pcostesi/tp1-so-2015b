@@ -72,10 +72,6 @@ struct atc_addr {
 };
 
 
-<<<<<<< HEAD
-int atc_request(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
-int atc_reply(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
-=======
 struct atc_conn {
     struct atc_addr addr;
     struct atc_req req;
@@ -91,6 +87,5 @@ int atc_close(struct atc_conn * conn);
 
 int atc_request(struct atc_conn * conn);
 int atc_reply(struct atc_conn * conn, atc_reply_handler handler);
->>>>>>> master
 
 #endif

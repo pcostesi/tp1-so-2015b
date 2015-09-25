@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
-#include "../atcd/include/atcd.h"
+#include "atcd.h"
 #include "atcc.h"
 
 static struct atc_state state;
@@ -14,6 +14,7 @@ int main(int argc, char ** argv)
 	atc_init();
 	init_UI();
 	init_time();
+	state.airports_num = get_airports(state.airports);
 	while(1){
 		update_state();
 		draw_UI();
@@ -29,7 +30,6 @@ void init_time(void){
 
 void update_state(void){
 	state.planes_num = get_airplanes(state.planes);
-	state.airports_num = get_airports(state.airports);
 	state.cur_time = time(NULL);
 	if (difftime(state.cur_time, state.tick_time) > 20){
 		state.tick_time = state.cur_time;
@@ -64,7 +64,7 @@ void input(int ch){
 		}
 	}else if (ch == '\n' && ui.cur_cmd != -1 && ui.cur_plane != -1){
 		struct atc_plane plane = state.planes[ui.cur_page*PLANES_PER_PAGE+ui.cur_plane];
-		set(ui.cur_cmd, plane);
+		set(ui.cur_cmd, &plane);
 		clear_UI();
 		if(ui.cur_cmd == speed_up){
 			mvwprintw(ui.cmd_log, 0, 0, "%s %s", plane.id, "is speeding up");

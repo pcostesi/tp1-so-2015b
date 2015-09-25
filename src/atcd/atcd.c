@@ -232,7 +232,7 @@ int set(enum atc_commands cmd, struct atc_plane *plane)
 			case turn_left: 	plane->heading = (plane->heading +45) % 360;
 								return sto_set(&sto_db, plane, plane->id);
 						break;
-			default: return 0;
+			default: return -1;
 		}
 	}
 	return 0;
@@ -275,7 +275,7 @@ static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH], v
 
 /*Initializes stuff*/
 
-int atc_init()
+int atc_init(void)
 {
 	return sto_init(&sto_db, "Planes", sizeof(struct atc_plane));
 
