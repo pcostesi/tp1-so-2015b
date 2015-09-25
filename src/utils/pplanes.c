@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
 
 
     printf("Database %s:\n", argv[1]);
-    assert(sto_query(&q, &db, NULL) != -1);
+    assert(sto_query(&q, &db, NULL, NULL) != -1);
     
     while ((sto_get(&q, &plane, key) != -1) && !sto_key_empty(key)) {
         print_row(&plane, key);

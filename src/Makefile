@@ -86,7 +86,6 @@ run:	$(CLI) $(SRV) $(ATC)
 
 test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p ${BIN}/test
-	$(CC) $(LDFLAGS) -o ${BIN}/test/storage ./test/storage.o $(ATCDOBJ)
 	
 $(DUMPDB):	utils/pplanes.o $(STOOBJ)
 	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^

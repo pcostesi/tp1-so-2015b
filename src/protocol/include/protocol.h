@@ -1,6 +1,7 @@
 #ifndef _ATC_PROTO
 #define _ATC_PROTO 1
 
+#include <netinet/in.h>
 #include "atcd.h"
 
 enum atc_req_type {
@@ -40,7 +41,11 @@ enum atc_conn_type {
 
 struct atc_req {
     enum atc_req_type type;
-    char id[ATCD_ID_LENGTH];
+    union {
+        char id[ATCD_ID_LENGTH];
+        struct atc_plane plane;
+        struct atc_airport airport;
+    } data;
 };
 
 
@@ -53,9 +58,10 @@ struct atc_res {
     } len;
     union {
         struct atc_plane planes[MAX_PLANES];
-        struct atc_plane airports[MAX_AIRPORTS];
+        struct atc_airport airports[MAX_AIRPORTS];
     } msg;
 };
+
 
 struct atc_addr {
     enum atc_conn_type type;
@@ -65,13 +71,26 @@ struct atc_addr {
     } conn;
 };
 
-int atc_connect(struct atc_addr * addr);
-int atc_listen(struct atc_addr * addr);
-int atc_close(struct atc_addr * addr);
 
+<<<<<<< HEAD
 int atc_request(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
 int atc_reply(struct atc_addr * addr, struct atc_req * req, struct atc_res * res);
+=======
+struct atc_conn {
+    struct atc_addr addr;
+    struct atc_req req;
+    struct atc_res res;
+};
 
-int atc_sendbytes(struct atc_addr * addr, void * buffer, size_t bytes);
-int atc_recvbytes(struct atc_addr * addr, void * buffer, size_t bytes);
+
+typedef int (*atc_reply_handler)(struct atc_conn * conn);
+
+int atc_connect(struct atc_conn * conn);
+int atc_listen(struct atc_conn * conn);
+int atc_close(struct atc_conn * conn);
+
+int atc_request(struct atc_conn * conn);
+int atc_reply(struct atc_conn * conn, atc_reply_handler handler);
+>>>>>>> master
+
 #endif

@@ -4,17 +4,32 @@
 #include "protocol.h"
 #include "serialize.h"
 
-
-int atc_send(struct atc_addr * addr, struct atc_req * req, struct atc_res * res)
+int atc_connect(struct atc_conn * conn)
 {
-    /* msg -> wire */
-    return atc_sendbytes(addr, NULL, 0);
+	return 0;
 }
 
-int atc_recv(struct atc_addr * addr, struct atc_req * req, struct atc_res * res)
+
+int atc_listen(struct atc_conn * conn)
 {
-    /* wire -> msg */
-    return atc_recvbytes(addr, NULL, 0);
+	return 0;
 }
 
+
+int atc_close(struct atc_conn * conn)
+{
+	return 0;
+}
+
+
+int atc_request(struct atc_conn * conn)
+{
+	return 0;
+}
+
+
+int atc_reply(struct atc_conn * conn, atc_reply_handler handler)
+{
+	return 0;
+}
 
