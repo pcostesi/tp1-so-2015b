@@ -1,23 +1,21 @@
 #ifndef __SRV_H
 #define __SRV_H 1
 
-#include <sys/types.h>
-#include <signal.h>
-#include <unistd.h>
+#include "protocol.h"
+
+/*struct listener_node{
+	pid_t pid;
+	struct listener_node *next;
+};
 
 struct listener_list{
-	listener_node head;
-	listener_node tail;
-};
-
-struct listener_node{
-	pid_t pid;
-	listener_node next;
-};
-
-void listen_client();
-void listen_channel();
+	struct listener_node *head;
+	struct listener_node *tail;
+};*/
+void reply_handler(struct atc_conn * conn);
+void listen_child_channels();
+void listen_channels();
 void fork_client();
-void kill_client(pid_t pid);
+/*void kill_client(pid_t pid);*/
 
-
+#endif

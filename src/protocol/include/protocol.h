@@ -11,7 +11,6 @@ enum atc_req_type {
     atc_turn_right,
     atc_ascend,
     atc_descend,
-    atc_get_time,
     atc_get_planes,
     atc_get_airports,
     atc_join,
@@ -25,8 +24,7 @@ enum atc_res_type {
     atc_ack,
     atc_err,
     atc_planes,
-    atc_airports,
-    atc_time
+    atc_airports
 };
 
 
@@ -41,7 +39,7 @@ enum atc_conn_type {
 
 struct atc_req {
     enum atc_req_type type;
-    char id[ATCD_ID_LENGTH];
+    struct atc_plane plane;
 };
 
 
@@ -50,11 +48,11 @@ struct atc_res {
     union {
         unsigned int airports;
         unsigned int planes;
-        int error_code;
     } len;
     union {
+        int error_code;
         struct atc_plane planes[MAX_PLANES];
-        struct atc_plane airports[MAX_AIRPORTS];
+        struct atc_airport airports[MAX_AIRPORTS];
     } msg;
 };
 
@@ -75,7 +73,7 @@ struct atc_conn {
 };
 
 
-typedef int (*atc_reply_handler)(struct atc_conn * conn);
+typedef void (*atc_reply_handler)(struct atc_conn * conn);
 
 int atc_connect(struct atc_conn * conn);
 int atc_listen(struct atc_conn * conn);
