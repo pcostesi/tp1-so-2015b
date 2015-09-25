@@ -1,5 +1,6 @@
 #include "atcd.h"
 #include "protocol.h"
+#include <string.h>
 
 static struct atc_conn conn;
 
@@ -11,16 +12,17 @@ int atc_init(void)
 }
 
 
-int get_planes(struct atc_plane buff[])
+int get_airplanes(struct atc_plane buff[])
 {
+	int count;
+	int i;
 	conn.req.type = atc_get_planes;
 	atc_request(&conn);
 /*	check errors*/
 	if(conn.res.type == atc_err){
 		return conn.res.msg.error_code;
 	}
-	int count = conn.res.len.planes;
-	int i = 0;
+	count = conn.res.len.planes;
 	for( i = 0; i < count ; i++){
 		memcpy(&buff[i], &conn.res.msg.planes[i], sizeof(struct atc_plane));
 	}
@@ -30,16 +32,18 @@ int get_planes(struct atc_plane buff[])
 
 int get_airports(struct atc_airport buff[])
 {
-	conn.req.type = get_airports;
+	int count;
+	int i;
+	conn.req.type = atc_get_airports;
 	atc_request(&conn);
 	if(conn.res.type == atc_err){
 		return conn.res.msg.error_code;
 	}
-	int count = conn.res.len.airports;
-	int i = 0;
+	count = conn.res.len.airports;
 	for(i = 0; i < count ; i++){
 		memcpy(&buff[i], &conn.res.msg.airports[i], sizeof(struct atc_airport));
 	}
+	return count;
 }
 
 void create_plane(void)
@@ -60,13 +64,13 @@ int set(enum atc_commands cmd, struct atc_plane *plane)
 						break;
 			case descend : conn.req.type = atc_descend;
 						break;
-			case turn_right : conn.req.type = atc_turn_rigth;
+			case turn_right : conn.req.type = atc_turn_right;
 						break;
 			case turn_left : conn.req.type = atc_turn_left;  
 						break;
 			default: return -1;
 		}
-	conn.req.data.plane = &plane;
+	conn.req.plane = *plane;
 	atc_request(&conn);
 	if(conn.res.type == atc_ack){
 		return 0;

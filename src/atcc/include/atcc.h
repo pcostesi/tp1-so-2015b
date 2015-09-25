@@ -43,6 +43,5 @@ void join_game(void);
 void leave_game(void);
 void update_state(void);
 void init_time(void);
-time_t get_time(void);
 
 #endif
