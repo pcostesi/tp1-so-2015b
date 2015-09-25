@@ -86,3 +86,21 @@ void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN
     ptr = _get_chr(ptr, (char *) &plane->status);
 }
 
+
+void atc_airport_to_wire(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
+{
+    unsigned char * ptr = wire;
+    assert(airport != NULL);
+    ptr = _get_int(ptr, &airport->x);
+    ptr = _get_int(ptr, &airport->y);
+    ptr = _get_strn(ptr, airport->id, 3);
+}
+
+void atc_wire_to_airport(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
+{
+    unsigned char * ptr = wire;
+    assert(airport != NULL);
+    ptr = _snd_int(ptr, airport->x);
+    ptr = _snd_int(ptr, airport->y);
+    ptr = _snd_strn(ptr, airport->id, 3);
+}
