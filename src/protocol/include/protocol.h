@@ -3,6 +3,7 @@
 
 #include <netinet/in.h>
 #include "atcd.h"
+#include "transport.h"
 
 enum atc_req_type {
     atc_speed_up,
@@ -27,16 +28,6 @@ enum atc_res_type {
     atc_airports
 };
 
-
-enum atc_conn_type {
-    atc_conn_socket,
-    atc_conn_fifo,
-    atc_conn_shmem,
-    atc_conn_file,
-    atc_conn_queue
-};
-
-
 struct atc_req {
     enum atc_req_type type;
     struct atc_plane plane;
@@ -56,24 +47,14 @@ struct atc_res {
     } msg;
 };
 
-
-struct atc_addr {
-    enum atc_conn_type type;
-    union {
-        struct sockaddr socket;
-        void * shmem;
-    } conn;
-};
-
-
 struct atc_conn {
-    struct atc_addr addr;
+    struct transport_addr addr;
     struct atc_req req;
     struct atc_res res;
 };
 
 
-typedef void (*atc_reply_handler)(struct atc_conn * conn);
+typedef int (*atc_reply_handler)(struct atc_conn * conn);
 
 int atc_connect(struct atc_conn * conn);
 int atc_listen(struct atc_conn * conn);

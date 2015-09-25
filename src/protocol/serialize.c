@@ -58,9 +58,10 @@ unsigned char * _get_int(unsigned char * ptr, int * x)
 }
 
 
-void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
+unsigned char * atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
 {
-    unsigned char * ptr = wire;
+    unsigned char * ptr;
+    ptr = wire;
     assert(plane != NULL);
     ptr = _snd_strn(ptr, plane->id, ATCD_ID_LENGTH);
     ptr = _snd_int(ptr, plane->x);
@@ -70,12 +71,14 @@ void atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN
     ptr = _snd_chr(ptr, (char) plane->heading);
     ptr = _snd_int(ptr, plane->speed);
     ptr = _snd_chr(ptr, (char) plane->status);
+    return ptr;
 }
 
 
-void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
+unsigned char * atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
 {
-    unsigned char * ptr = wire;
+    unsigned char * ptr;
+    ptr = wire;
     assert(plane != NULL);
     ptr = _get_strn(ptr, plane->id, ATCD_ID_LENGTH);
     ptr = _get_int(ptr, &plane->x);
@@ -85,23 +88,87 @@ void atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN
     ptr = _get_chr(ptr, (char *) &plane->heading);
     ptr = _get_int(ptr, &plane->speed);
     ptr = _get_chr(ptr, (char *) &plane->status);
+    return ptr;
 }
 
 
-void atc_airport_to_wire(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
+unsigned char * atc_airport_to_wire(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
 {
-    unsigned char * ptr = wire;
+    unsigned char * ptr;
+    ptr = wire;
     assert(airport != NULL);
     ptr = _get_int(ptr, &airport->x);
     ptr = _get_int(ptr, &airport->y);
     ptr = _get_strn(ptr, airport->id, 3);
+    return ptr;
 }
 
-void atc_wire_to_airport(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
+unsigned char * atc_wire_to_airport(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
 {
-    unsigned char * ptr = wire;
+    unsigned char * ptr;
+    ptr = wire;
     assert(airport != NULL);
     ptr = _snd_int(ptr, airport->x);
     ptr = _snd_int(ptr, airport->y);
     ptr = _snd_strn(ptr, airport->id, 3);
+    return ptr;
 }
+
+
+
+unsigned char * atc_req_to_wire(struct atc_req * req, unsigned char wire[ATCP_MSG_LEN])
+{
+    unsigned char * ptr;
+    ptr = wire;
+
+    ptr = _snd_int(ptr, req->type);
+    switch (req->type) {
+        case atc_speed_up:
+        case atc_speed_down:
+        case atc_turn_left:
+        case atc_turn_right:
+        case atc_ascend:
+        case atc_descend:
+        ptr = atc_plane_to_wire(&req->plane, ptr);
+        break;
+
+        default:
+        memset(ptr, 0, ATCP_MSG_LEN - (ptr - wire));
+    }
+    return ptr;
+}
+
+unsigned char * atc_wire_to_req(struct atc_req * req, unsigned char wire[ATCP_MSG_LEN])
+{
+    unsigned char * ptr;
+    ptr = wire;
+
+    ptr = _get_int(ptr, (int *) &req->type);
+    switch (req->type) {
+        case atc_speed_up:
+        case atc_speed_down:
+        case atc_turn_left:
+        case atc_turn_right:
+        case atc_ascend:
+        case atc_descend:
+        ptr = atc_wire_to_plane(&req->plane, ptr);
+        break;
+
+        default:
+        break;
+    }
+    return ptr;
+}
+
+
+unsigned char * atc_res_to_wire(struct atc_res * res, unsigned char wire[ATCP_MSG_LEN])
+{
+    return NULL;
+}
+
+
+unsigned char * atc_wire_to_res(struct atc_res * res, unsigned char wire[ATCP_MSG_LEN])
+{
+    return NULL;
+}
+
