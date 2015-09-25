@@ -25,6 +25,7 @@ struct sto_cursor {
     unsigned int cursor;
     struct sto_database * database;
     sto_filter filter;
+    void * params;
 };
 
 

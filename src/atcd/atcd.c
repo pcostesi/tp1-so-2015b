@@ -16,7 +16,7 @@ static double _sin(int angle);
 static float _cos(int angle);
 static int _rand_number();
 static int _rand_capital_letter();
-static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH]);
+static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH], void * params);
 
 static struct sto_database sto_db;
 static int _planes_count = 0;
