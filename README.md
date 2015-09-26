@@ -40,7 +40,7 @@ be used for debugging.
 The project is divided into six main modules and some extra support files:
 - **ATCC**: Frontend, client side logic.
 - **CLI**: Re-implements the _ATCD_ functions as proxy calls to the API.
-- **COMM**: A bi-directional communication, backend-agnostic layer.
+- **COMM**: A bi-directional communication layer, used by _Protocol_.
   - Pipe
   - File
   - Socket
@@ -50,7 +50,7 @@ The project is divided into six main modules and some extra support files:
   child processes call the backend functions.
 - **ATCD**: Game logic, keeps the game state and runs the simulation.
 - **STO**: Data storage abstraction layer (w/locking + concurrency control.)
-- **msg.h**: Common message/protocol header.
+- **Protocol**: Common message/protocol functions and header. Backend-agnostic.
 
 
 Combo table:
