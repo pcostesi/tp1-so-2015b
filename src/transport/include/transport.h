@@ -14,7 +14,7 @@ enum transport_conn_type {
 struct transport_addr {
     enum transport_conn_type type;
     union {
-        struct sockaddr socket;
+        int sockfd;
         void * shmem;
     } conn;
 };
@@ -26,5 +26,7 @@ int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t 
 int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t size);
 
 int transport_connect(struct transport_addr * addr);
-int transport_listen(struct transport_addr * addr);
+int transport_listen(struct transport_addr * lsten);
 int transport_close(struct transport_addr * addr);
+int transport_serv_init(struct transport_addr * addr);
+int transport_accept(struct transport_addr * listen, struct transport_addr *accepts);
