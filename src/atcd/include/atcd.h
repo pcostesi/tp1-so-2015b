@@ -6,7 +6,7 @@
 #include <time.h>
 #include <storage.h>
 
-#define LANDING_TOLERANCE 200
+#define LANDING_TOLERANCE 500
 #define MAX_LEN 4000
 #define MAX_HEIGHT 4000
 #define MAX_AIRPORTS 2
@@ -58,6 +58,10 @@ int get_airplanes(struct atc_plane buffer[]);
 int atc_init(void);
 
 void create_plane(void);
+
+int get_crashed(void);
+
+int get_landed(void);
 
 #endif
 

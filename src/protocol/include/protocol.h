@@ -23,7 +23,6 @@ enum atc_req_type {
 
 enum atc_res_type {
     atc_ack,
-    atc_err,
     atc_planes,
     atc_airports
 };
@@ -41,7 +40,7 @@ struct atc_res {
         unsigned int planes;
     } len;
     union {
-        int error_code;
+        int return_code;
         struct atc_plane planes[MAX_PLANES];
         struct atc_airport airports[MAX_AIRPORTS];
     } msg;
