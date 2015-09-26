@@ -19,7 +19,7 @@ void init_signal_handlers(void);
 void srv_sigchld_handler(int sig);
 void srv_sigint_handler(int sig);
 void listen_channels(void);
-void listen_child_channels(void);
+void listen_child_channels(struct atc_conn * conn);
 void kill_client(pid_t pid);
 void fork_client(struct atc_conn * conn);
 int reply_handler(struct atc_conn * conn);

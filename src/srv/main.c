@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 struct pid_list pids;
+struct atc_conn serverConn;
 
 int main(int argc, char ** arcv)
 {
@@ -66,7 +67,7 @@ void fork_client(struct atc_conn * conn){
     struct pid_node * node;
 	if (child_pid == 0){
         printf("Waiting for requests in pid %d ...\n", child_pid);
-		listen_child_channels();
+		listen_child_channels(conn);
 	}else{
 		node = (struct pid_node *) malloc(sizeof(struct pid_node));
         node->pid = child_pid;
@@ -118,18 +119,16 @@ void kill_client(pid_t pid){
 }
 
 void listen_channels(void){
-	struct atc_conn conn;
-	while (!atc_listen(&conn)){
+	while (!atc_listen(&serverConn)){
 	}
-	if (conn.req.type == atc_join){
-		fork_client(&conn);
-	}
+    struct atc_conn childConn= malloc(sizeof(atc_conn));
+	atc_accept(&serverConn, &childConn);
+    fork_client(&childConn);
 	return;
 }
 
-void listen_child_channels(void){
-	struct atc_conn conn;
-	while (!atc_reply(&conn, (atc_reply_handler) &reply_handler)){
+void listen_child_channels(struct atc_conn * conn){
+	while (!atc_reply(conn, (atc_reply_handler) &reply_handler)){
 	}
 	return;
 }
