@@ -16,10 +16,11 @@ static double _sin(int angle);
 static float _cos(int angle);
 static int _rand_number();
 static int _rand_capital_letter();
-static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH], void * params);
 
 static struct sto_database sto_db;
 static int _planes_count = 0;
+static int atcd_crashed_count = 0;
+static int atcd_landed_count = 0;
 
 /*esto va en main sto_init(sto_db, "Planes", sizeof(struct atc_plane));*/
 
@@ -63,11 +64,11 @@ static void _crashed_or_landed(struct atc_plane *plane)
 {
 	if(plane->elevation != -10 || plane->speed > 56 || !_in_da_zone(plane) ){
 		plane->status = crashed;
-		_planes_count -= 1;
 	}
 	else{
 		plane->status = landed;
 	}
+	sto_set(&sto_db, plane, plane->id);
 }
 
 /*Return 0 if the plane is IN DA ZONE!!
@@ -240,37 +241,51 @@ int set(enum atc_commands cmd, struct atc_plane *plane)
 
 
 /*Returns the amount of planes flying currently, which are loaded into the received plane buffer. Also, updates the storage
-when it detects that a plane has colided or landed*/
+when it detects that a plane has colided or landed, or -1 if there was an error*/
 int get_airplanes(struct atc_plane buffer[])
 {
+
 	time_t current_time = get_time();
 	struct atc_plane plane;
 	int count = 0;
 	int new_plane_flag = 1;
 	struct sto_cursor query;
-	sto_query(&query, &sto_db, (sto_filter)_flying_planes, NULL);
-
+	int error_flag = 0;
+	error_flag = sto_query(&query, &sto_db, NULL, NULL);
+	if(error_flag == -1) {
+		atcd_crashed_count = atcd_landed_count = -1; 
+		sto_close(&query);
+		return error_flag;
+	}
+	atcd_crashed_count = 0;
+	atcd_landed_count = 0;
 	new_plane_flag = sto_get(&query, &plane, NULL);
 
-	while( (new_plane_flag != 0 && count < MAX_PLANES) ){
-		if(calculate_position(&plane, current_time) ){
-			memcpy(&buffer[count], &plane, sizeof(struct atc_plane));
-			count++;
+	while( (new_plane_flag > 0) ){
+		if(plane.status == flying){
+			if(calculate_position(&plane, current_time) && count < MAX_PLANES){
+				memcpy(&buffer[count], &plane, sizeof(struct atc_plane));
+				count++;
+			}
+		}
+		else if(plane.status == crashed){
+			atcd_crashed_count += 1;
+		}
+		else if(plane.status == landed){
+			atcd_landed_count =+ 1;
 		}
 		new_plane_flag = sto_get(&query, &plane, NULL);
 	}
-
+	if(new_plane_flag == -1){
+		atcd_crashed_count = atcd_landed_count = -1; 
+		sto_close(&query);
+		return -1;
+	}
 	_planes_count = count;	
 	sto_close(&query);
 	return count;
 }
 
-
-/*Auxiliary function to start a query*/
-static int _flying_planes(struct atc_plane * plane, char name[ATCD_ID_LENGTH], void * params)
-{
-	return plane->status == flying;
-}
 
 
 /*Initializes stuff*/
@@ -279,4 +294,12 @@ int atc_init(void)
 {
 	return sto_init(&sto_db, "Planes", sizeof(struct atc_plane));
 
+}
+
+int get_crashed(void){
+	return atcd_crashed_count;
+}
+
+int get_landed(void){
+	return atcd_landed_count;
 }

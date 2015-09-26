@@ -15,16 +15,18 @@
 
 struct atc_state{
 	struct atc_plane planes[MAX_PLANES];
-	int planes_num;
 	struct atc_airport airports[MAX_AIRPORTS];
+	int planes_num;
 	int airports_num;
 	time_t cur_time;
 	time_t tick_time;
+	int crashed_planes;
+	int landed_planes;
 };
 
 struct atc_ui{
-	WINDOW *map, *cmd_log, *plane_list, *cmds;
-	WINDOW *brd_map, *brd_cmd_log, *brd_plane_list, *brd_cmds;
+	WINDOW *map, *cmd_log, *plane_list, *cmds, *score;
+	WINDOW *brd_map, *brd_cmd_log, *brd_plane_list, *brd_cmds, *brd_score;
 
 	int cur_plane;
 	int cur_cmd;

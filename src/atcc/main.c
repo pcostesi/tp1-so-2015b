@@ -14,6 +14,7 @@ int main(int argc, char ** argv)
 	atc_init();
 	init_UI();
 	init_time();
+	create_plane();
 	state.airports_num = get_airports(state.airports);
 	while(1){
 		update_state();
@@ -30,6 +31,8 @@ void init_time(void){
 
 void update_state(void){
 	state.planes_num = get_airplanes(state.planes);
+	state.crashed_planes = get_crashed();
+	state.landed_planes = get_landed();
 	state.cur_time = time(NULL);
 	if (difftime(state.cur_time, state.tick_time) > 20){
 		state.tick_time = state.cur_time;
@@ -94,22 +97,26 @@ void init_UI(void){
 	ui.brd_map = newwin(MAP_HEIGHT+BORDER, MAP_WIDTH+BORDER, 0, 0);
 	ui.brd_plane_list = newwin(LIST_HEIGHT+BORDER, LIST_WIDTH+BORDER, 0, MAP_WIDTH+BORDER);
 	ui.brd_cmds = newwin(LIST_CMDS+BORDER, LIST_WIDTH+BORDER, LIST_HEIGHT+BORDER, MAP_WIDTH+BORDER);
-	ui.brd_cmd_log = newwin(LOG_HEIGHT+BORDER, MAP_WIDTH+LIST_WIDTH+BORDER*2, MAP_HEIGHT+BORDER, 0);
+	ui.brd_cmd_log = newwin(LOG_HEIGHT+BORDER, MAP_WIDTH+BORDER, MAP_HEIGHT+BORDER, 0);
+	ui.brd_score = newwin(LOG_HEIGHT+BORDER, LIST_WIDTH+BORDER, MAP_HEIGHT+BORDER, MAP_WIDTH+BORDER);
 
 	ui.map = newwin(MAP_HEIGHT, MAP_WIDTH, 1, 1);
 	ui.plane_list = newwin(LIST_HEIGHT, LIST_WIDTH, 1, MAP_WIDTH+BORDER+1);
 	ui.cmds = newwin(LIST_CMDS, LIST_WIDTH, LIST_HEIGHT+BORDER+1, MAP_WIDTH+BORDER+1);
-	ui.cmd_log = newwin(LOG_HEIGHT, MAP_WIDTH+LIST_WIDTH+BORDER, MAP_HEIGHT+BORDER+1, 1);
+	ui.cmd_log = newwin(LOG_HEIGHT, MAP_WIDTH, MAP_HEIGHT+BORDER+1, 1);
+	ui.score = newwin(LOG_HEIGHT, LIST_WIDTH, MAP_HEIGHT+BORDER+1, MAP_WIDTH+BORDER+1);
 	
 	box(ui.brd_map, 0, 0);
 	box(ui.brd_cmd_log, 0, 0);
 	box(ui.brd_plane_list, 0, 0);
 	box(ui.brd_cmds, 0, 0);
+	box(ui.brd_score, 0, 0);
 
 	wrefresh(ui.brd_map);
 	wrefresh(ui.brd_cmd_log);
 	wrefresh(ui.brd_plane_list);
 	wrefresh(ui.brd_cmds);
+	wrefresh(ui.brd_score);
 	
 	ui.cur_page = 0;
 	ui.cur_plane = -1;
@@ -122,6 +129,7 @@ void draw_UI(void){
 	wclear(ui.plane_list);	
 	wclear(ui.cmds);
 	wclear(ui.map);
+	wclear(ui.score);
 	
 	for (i = 0; i < state.airports_num; i++){
 		mvwprintw(ui.map, (state.airports[i].y/(float)MAX_HEIGHT)*(MAP_HEIGHT), (state.airports[i].x/(float)MAX_LEN)*(MAP_WIDTH), "@");
@@ -135,7 +143,7 @@ void draw_UI(void){
 			if (ui.cur_plane >= 0 && i == ui.cur_page*PLANES_PER_PAGE+ui.cur_plane){
 				mvwchgat(ui.plane_list, (i%PLANES_PER_PAGE)*2, 0, -1, A_REVERSE, 0, NULL);
 			}
-			mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "%s E:%d S:%d H:%d", get_status(state.planes[i].status), state.planes[i].elevation, state.planes[i].speed, state.planes[i].heading);
+			mvwprintw(ui.plane_list, (i%PLANES_PER_PAGE)*2+1, 0, "%s E:%d S:%d H:%d", get_status(state.planes[i].status), state.planes[i].elevation, (state.planes[i].speed/14)*50, state.planes[i].heading);
 		}		
 	}
 
@@ -146,9 +154,12 @@ void draw_UI(void){
 		}
 	}
 
+	mvwprintw(ui.score, 0, 0, "Landed:%d Crashed:%d", state.landed_planes, state.crashed_planes);
+
 	wrefresh(ui.map);
 	wrefresh(ui.cmds);
 	wrefresh(ui.plane_list);	
+	wrefresh(ui.score);
 }
 
 void clear_UI(void){

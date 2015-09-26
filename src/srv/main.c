@@ -42,8 +42,8 @@ void srv_sigchld_handler(int sig){
     pid_t p;
     int status;
     while ((p = waitpid(-1, &status, WNOHANG)) != -1){
-        struct pid_node node = get_node_from_pid(p);
-        atc_close(node.conn);
+        struct pid_node *node = get_node_from_pid(p);
+        atc_close(node->conn);
         free(node);
     }
 }
@@ -80,11 +80,11 @@ void fork_client(struct atc_conn * conn){
 	return;
 }
 
-struct atc_conn * get_conn_from_pid(pid_t pid){
+struct pid_node * get_node_from_pid(pid_t pid){
     struct pid_node * cur_node = pids.head;
     while(cur_node != NULL){
         if (cur_node->pid == pid){
-            return cur_node->conn;
+            return cur_node;
         }
     }
     return NULL;
@@ -133,73 +133,85 @@ void listen_child_channels(void){
 }
 
 void reply_handler(struct atc_conn * conn){
-	struct atc_res response = conn->res;
+    int aux;
+    struct atc_res response = conn->res;
 	switch (conn->req.type){
 		case atc_speed_up:
 		response.type = atc_ack;
     	if (set(speed_down, &(conn->req.plane)) == -1){
-    		response.type = atc_err;
-    		response.msg.error_code = -1;
+    		response.msg.return_code = -1;
     	}
 		break;
     	case atc_speed_down:
     	response.type = atc_ack;
     	if(set(speed_down, &(conn->req.plane)) == -1){
-    		response.type = atc_err;
-    		response.msg.error_code = -1;
+    		response.msg.return_code = -1;
     	}
     	break;
     	case atc_turn_left:
     	response.type = atc_ack;
     	if(set(turn_left, &(conn->req.plane)) == -1){
-    		response.type = atc_err;
-    		response.msg.error_code = -1;
+    		response.msg.return_code = -1;
     	}
     	break;
     	case atc_turn_right:
     	response.type = atc_ack;
     	if(set(turn_right, &(conn->req.plane)) == -1){
-    		response.type = atc_err;
-    		response.msg.error_code = -1;
+    		response.msg.return_code = -1;
     	}
     	break;
     	case atc_ascend:
     	response.type = atc_ack;
     	if (set(climb, &(conn->req.plane)) == -1){
-    		response.type = atc_err;
-    		response.msg.error_code = -1;
+    		response.msg.return_code = -1;
     	}
     	break;
     	case atc_descend:
     	response.type = atc_ack;
     	if(set(descend, &(conn->req.plane)) == -1){
-    		response.type = atc_err;
-    		response.msg.error_code = -1;
+    		response.msg.return_code = -1;
     	}
     	break;
     	case atc_get_planes:
     	response.type = atc_planes;
-    	response.len.planes = get_airplanes(response.msg.planes);
+    	aux = get_airplanes(response.msg.planes);
+        if (aux == -1){
+            response.msg.return_code = -1;
+        }else{
+            response.len.planes = aux;
+        }
     	break;
     	case atc_get_airports:
     	response.type = atc_airports;
     	response.len.airports = get_airports(response.msg.airports);
     	break;
     	case atc_get_landed:
-    	/*TODO*/
+    	response.type = atc_ack;
+        aux = get_landed();
+        if (aux == -1){
+            response.msg.return_code = -1;
+        }else{
+            response.len.planes = aux;
+        }
     	break;
     	case atc_get_crashed:
-    	/*TODO*/
+        response.type = atc_ack;
+    	aux = get_crashed();
+        if (aux == -1){
+            response.msg.return_code = -1;
+        }else{
+            response.len.planes = aux;
+        }
     	break;
     	case atc_create_plane:
     	response.type = atc_ack;
     	create_plane();
     	break;
     	case atc_join:
-    	response.type = atc_err;
-    	response.msg.error_code = -1;
+    	response.type = atc_ack;
     	break;
     	case atc_leave:
+        response.type = atc_ack;
     	exit(0);
     	break;
 	}
