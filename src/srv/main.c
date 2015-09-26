@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -28,11 +29,12 @@ void init_server(void){
 
 void init_signal_handlers(void){
     struct sigaction sigchld;
+    struct sigaction sigint;
+    
     memset(&sigchld, 0, sizeof(sigchld));
     sigchld.sa_handler = srv_sigchld_handler;
     sigaction(SIGCHLD, &sigchld, NULL);
 
-    struct sigaction sigint;
     memset(&sigint, 0, sizeof(sigint));
     sigint.sa_handler = srv_sigint_handler;
     sigaction(SIGINT, &sigint, NULL);
@@ -49,7 +51,7 @@ void srv_sigchld_handler(int sig){
 }
 
 void srv_sigint_handler(int sig){
-    struct pid_node * next, cur_node;
+    struct pid_node * next, *cur_node;
     cur_node = next = pids.head;
     while (next != NULL){
         atc_close(cur_node->conn);
@@ -66,7 +68,7 @@ void fork_client(struct atc_conn * conn){
         printf("Waiting for requests in pid %d ...\n", child_pid);
 		listen_child_channels();
 	}else{
-		node = (struct pid_node *) malloc(sizeof(pid_node));
+		node = (struct pid_node *) malloc(sizeof(struct pid_node));
         node->pid = child_pid;
         node->conn = conn;
         node->next = NULL;
@@ -120,19 +122,19 @@ void listen_channels(void){
 	while (!atc_listen(&conn)){
 	}
 	if (conn.req.type == atc_join){
-		fork_client();
+		fork_client(&conn);
 	}
 	return;
 }
 
 void listen_child_channels(void){
 	struct atc_conn conn;
-	while (!atc_reply(&conn, &reply_handler)){
+	while (!atc_reply(&conn, (atc_reply_handler) &reply_handler)){
 	}
 	return;
 }
 
-void reply_handler(struct atc_conn * conn){
+int reply_handler(struct atc_conn * conn){
     int aux;
     struct atc_res response = conn->res;
 	switch (conn->req.type){
@@ -215,4 +217,5 @@ void reply_handler(struct atc_conn * conn){
     	exit(0);
     	break;
 	}
+    return 0;
 }

@@ -22,7 +22,7 @@ void listen_channels(void);
 void listen_child_channels(void);
 void kill_client(pid_t pid);
 void fork_client(struct atc_conn * conn);
-void reply_handler(struct atc_conn * conn);
-struct pid_node get_node_from_pid(pid_t pid);
+int reply_handler(struct atc_conn * conn);
+struct pid_node *get_node_from_pid(pid_t pid);
 
 #endif
