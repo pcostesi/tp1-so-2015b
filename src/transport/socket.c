@@ -143,4 +143,3 @@ int transport_serv_init(struct transport_addr * addr)
 	/*save in addr*/
 	return 0;
 }
-	

@@ -272,7 +272,7 @@ int get_airplanes(struct atc_plane buffer[])
 			atcd_crashed_count += 1;
 		}
 		else if(plane.status == landed){
-			atcd_landed_count =+ 1;
+			atcd_landed_count += 1;
 		}
 		new_plane_flag = sto_get(&query, &plane, NULL);
 	}

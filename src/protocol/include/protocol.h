@@ -55,7 +55,10 @@ struct atc_conn {
 
 typedef int (*atc_reply_handler)(struct atc_conn * conn);
 
+
+int atc_srv_init(struct atc_conn * conn);
 int atc_connect(struct atc_conn * conn);
+int atc_accept(struct atc_conn * conn, struct atc_conn * client);
 int atc_listen(struct atc_conn * conn);
 int atc_close(struct atc_conn * conn);
 
