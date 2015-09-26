@@ -3,19 +3,26 @@
 
 #include "protocol.h"
 
-/*struct listener_node{
+struct pid_node{
 	pid_t pid;
-	struct listener_node *next;
+	struct atc_conn *conn;
+	struct pid_node *next;
 };
 
-struct listener_list{
-	struct listener_node *head;
-	struct listener_node *tail;
-};*/
+struct pid_list{
+	struct pid_node *head;
+	struct pid_node *tail;
+};
+
+void init_server(void);
+void init_signal_handlers(void);
+void srv_sigchld_handler(int sig);
+void srv_sigint_handler(int sig);
+void listen_channels(void);
+void listen_child_channels(void);
+void kill_client(pid_t pid);
+void fork_client(struct atc_conn * conn);
 void reply_handler(struct atc_conn * conn);
-void listen_child_channels();
-void listen_channels();
-void fork_client();
-/*void kill_client(pid_t pid);*/
+struct pid_node get_node_from_pid(pid_t pid);
 
 #endif

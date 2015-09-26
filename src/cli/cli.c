@@ -1,16 +1,30 @@
 #include "atcd.h"
+#include "cli.h"
 #include "protocol.h"
+#include <signal.h>
 #include <string.h>
 
 static struct atc_conn conn;
 
-
 int atc_init(void)
 {
+	init_signal_handler();
 	conn.req.type = atc_join;
 	return atc_connect(&conn);
 }
 
+void init_signal_handler(void){
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = cli_sigint_handler;
+    sigaction(SIGINT, &sa, NULL);
+}
+
+void cli_sigint_handler(int sig){
+	conn.req.type = atc_leave;
+	atc_request(&conn);
+	atc_close(&conn);
+}
 
 int get_airplanes(struct atc_plane buff[])
 {
@@ -18,7 +32,7 @@ int get_airplanes(struct atc_plane buff[])
 	int i;
 	conn.req.type = atc_get_planes;
 	atc_request(&conn);
-/*	check errors*/
+	/*	check errors*/
 	if(conn.res.type == atc_err){
 		return conn.res.msg.error_code;
 	}
