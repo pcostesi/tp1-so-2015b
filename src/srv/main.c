@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 struct pid_list pids;
-struct atc_conn serverConn;
+struct atc_conn * serverConn;
 
 int main(int argc, char ** arcv)
 {
@@ -119,11 +119,12 @@ void kill_client(pid_t pid){
 }
 
 void listen_channels(void){
-	while (!atc_listen(&serverConn)){
+    struct atc_conn *childConn;
+	while (!atc_listen(serverConn)){
 	}
-    struct atc_conn childConn= malloc(sizeof(atc_conn));
-	atc_accept(&serverConn, &childConn);
-    fork_client(&childConn);
+    childConn = malloc(sizeof(struct atc_conn));
+	atc_accept(serverConn, childConn);
+    fork_client(childConn);
 	return;
 }
 
