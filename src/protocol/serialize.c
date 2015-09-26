@@ -155,20 +155,68 @@ unsigned char * atc_wire_to_req(struct atc_req * req, unsigned char wire[ATCP_MS
         break;
 
         default:
+        memset(&req->plane, 0, sizeof(struct atc_plane));
         break;
     }
     return ptr;
 }
 
 
-unsigned char * atc_res_to_wire(struct atc_res * res, unsigned char wire[ATCP_MSG_LEN])
+int atc_header_to_res(struct atc_res * res, unsigned char wire[ATCP_HEADER_LEN])
 {
-    return NULL;
+    int header_type;
+    int header_payload;
+    unsigned char * ptr;
+
+    ptr = wire;
+    ptr = _get_int(wire, &header_type);
+    ptr = _get_int(wire, &header_payload);
+    
+    res->type = (enum atc_res_type) header_type;
+    switch (res->type) {
+        case atc_ack:
+        res->len.planes = 0;
+        res->msg.return_code = header_payload;
+        break;
+
+        case atc_planes:
+        res->len.planes = header_payload;
+        break;
+
+        case atc_airports:
+        res->len.airports = header_payload;
+        break;
+
+        default:
+        return -1;
+    }
+    return ptr - wire;
 }
 
-
-unsigned char * atc_wire_to_res(struct atc_res * res, unsigned char wire[ATCP_MSG_LEN])
+int atc_res_to_header(struct atc_res * res, unsigned char wire[ATCP_HEADER_LEN])
 {
-    return NULL;
+    unsigned char * ptr;
+
+    ptr = wire;
+    ptr = _snd_int(wire, (int) res->type);
+    
+    switch (res->type) {
+        case atc_ack:
+        ptr = _snd_int(wire, res->msg.return_code);
+        break;
+
+        case atc_planes:
+        ptr = _snd_int(wire, res->len.planes);
+        break;
+
+        case atc_airports:
+        ptr = _snd_int(wire, res->len.airports);
+        break;
+
+        default:
+        return -1;
+    }
+    return ptr - wire;
 }
+
 
