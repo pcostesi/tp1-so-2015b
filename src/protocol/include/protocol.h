@@ -6,7 +6,7 @@
 #include "transport.h"
 
 enum atc_req_type {
-    atc_speed_up,
+    atc_speed_up = '1',
     atc_speed_down,
     atc_turn_left,
     atc_turn_right,
@@ -15,16 +15,16 @@ enum atc_req_type {
     atc_get_planes,
     atc_get_airports,
     atc_join,
-    atc_leave,
+    atc_leave = 'L',
     atc_get_landed,
     atc_get_crashed,
     atc_create_plane
 };
 
 enum atc_res_type {
-    atc_ack,
-    atc_planes,
-    atc_airports
+    atc_ack = 'a',
+    atc_planes = 'p',
+    atc_airports = 'c'
 };
 
 struct atc_req {

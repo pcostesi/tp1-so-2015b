@@ -169,8 +169,8 @@ int atc_header_to_res(struct atc_res * res, unsigned char wire[ATCP_HEADER_LEN])
     unsigned char * ptr;
 
     ptr = wire;
-    ptr = _get_int(wire, &header_type);
-    ptr = _get_int(wire, &header_payload);
+    ptr = _get_int(ptr, &header_type);
+    ptr = _get_int(ptr, &header_payload);
     
     res->type = (enum atc_res_type) header_type;
     switch (res->type) {
@@ -198,19 +198,19 @@ int atc_res_to_header(struct atc_res * res, unsigned char wire[ATCP_HEADER_LEN])
     unsigned char * ptr;
 
     ptr = wire;
-    ptr = _snd_int(wire, (int) res->type);
+    ptr = _snd_int(ptr, (int) res->type);
     
     switch (res->type) {
         case atc_ack:
-        ptr = _snd_int(wire, res->msg.return_code);
+        ptr = _snd_int(ptr, res->msg.return_code);
         break;
 
         case atc_planes:
-        ptr = _snd_int(wire, res->len.planes);
+        ptr = _snd_int(ptr, res->len.planes);
         break;
 
         case atc_airports:
-        ptr = _snd_int(wire, res->len.airports);
+        ptr = _snd_int(ptr, res->len.airports);
         break;
 
         default:
