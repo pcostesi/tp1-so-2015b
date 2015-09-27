@@ -11,12 +11,6 @@ static int _atc_read_response(struct atc_conn * conn);
 static int _atc_write_response(struct atc_conn * conn);
 
 
-int atc_srv_init(struct atc_conn * conn)
-{
-    return transport_serv_init(&conn->addr);
-}
-
-
 int atc_accept(struct atc_conn * conn, struct atc_conn * client)
 {
     return transport_accept(&conn->addr, &client->addr);

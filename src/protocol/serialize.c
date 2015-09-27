@@ -61,6 +61,7 @@ unsigned char * _get_int(unsigned char * ptr, int * x)
 unsigned char * atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[ATCP_MSG_LEN])
 {
     unsigned char * ptr;
+    memset(wire, 0, ATCP_MSG_LEN);
     ptr = wire;
     assert(plane != NULL);
     ptr = _snd_strn(ptr, plane->id, ATCD_ID_LENGTH);
@@ -68,9 +69,10 @@ unsigned char * atc_plane_to_wire(struct atc_plane * plane, unsigned char wire[A
     ptr = _snd_int(ptr, plane->y);
     ptr = _snd_int(ptr, plane->z);
     ptr = _snd_int(ptr, (int) plane->time);
-    ptr = _snd_chr(ptr, (char) plane->heading);
-    ptr = _snd_int(ptr, plane->speed);
-    ptr = _snd_chr(ptr, (char) plane->status);
+    ptr = _snd_int(ptr, (int) plane->heading);
+    ptr = _snd_int(ptr, (int) plane->elevation);
+    ptr = _snd_int(ptr, (int) plane->speed);
+    ptr = _snd_int(ptr, (int) plane->status);
     return ptr;
 }
 
@@ -79,20 +81,22 @@ unsigned char * atc_wire_to_plane(struct atc_plane * plane, unsigned char wire[A
 {
     unsigned char * ptr;
     ptr = wire;
+    memset(plane, 0, sizeof(struct atc_plane));
     assert(plane != NULL);
     ptr = _get_strn(ptr, plane->id, ATCD_ID_LENGTH);
     ptr = _get_int(ptr, &plane->x);
     ptr = _get_int(ptr, &plane->y);
     ptr = _get_int(ptr, &plane->z);
     ptr = _get_int(ptr, (int *) &plane->time);
-    ptr = _get_chr(ptr, (char *) &plane->heading);
+    ptr = _get_int(ptr, (int *) &plane->heading);
+    ptr = _get_int(ptr, (int *) &plane->elevation);
     ptr = _get_int(ptr, &plane->speed);
-    ptr = _get_chr(ptr, (char *) &plane->status);
+    ptr = _get_int(ptr, (int *) &plane->status);
     return ptr;
 }
 
 
-unsigned char * atc_airport_to_wire(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
+unsigned char * atc_wire_to_airport(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
 {
     unsigned char * ptr;
     ptr = wire;
@@ -103,7 +107,7 @@ unsigned char * atc_airport_to_wire(struct atc_airport * airport, unsigned char 
     return ptr;
 }
 
-unsigned char * atc_wire_to_airport(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
+unsigned char * atc_airport_to_wire(struct atc_airport * airport, unsigned char wire[ATCP_MSG_LEN])
 {
     unsigned char * ptr;
     ptr = wire;

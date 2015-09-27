@@ -16,16 +16,23 @@ int main(int argc, char ** arcv)
 {
     printf("Initializing server...\n");
 	init_server();
-	while(1){
-        printf("Waiting for new channels...\n");
-		listen_channels();
-	}
+    printf("Waiting for new channels...\n");
+	listen_channels();
+
     return 0;
 }
 
 void init_server(void){
-    atc_init();
-    atc_srv_init(&serverConn);
+    if (atc_init() == -1) {
+        perror("Could not init");
+        exit(-1);
+    };
+
+    if (atc_listen(&serverConn) == -1) {
+      perror("Could not listen");
+      exit(-1); 
+    };
+    
     init_signal_handlers();
 }
 
@@ -121,101 +128,114 @@ void kill_client(pid_t pid){
 
 void listen_channels(void){
     struct atc_conn *childConn;
-	while (!atc_listen(&serverConn)){
+    int result;
+	while (1) {
+
+        childConn = malloc(sizeof(struct atc_conn));
+        result = atc_accept(&serverConn, childConn);
+        if (result == -1) {
+            puts("Could not accept connection.");
+            return;
+        }
+        fork_client(childConn);
 	}
-    childConn = malloc(sizeof(struct atc_conn));
-	atc_accept(&serverConn, childConn);
-    fork_client(childConn);
-	return;
+    return;
 }
 
 void listen_child_channels(struct atc_conn * conn){
-	while (!atc_reply(conn, (atc_reply_handler) &reply_handler)){
-	}
+	while (atc_reply(conn, (atc_reply_handler) &reply_handler) != -1) {
+    }
+    atc_close(conn);
 	return;
 }
 
 int reply_handler(struct atc_conn * conn){
     int aux;
-    struct atc_res response = conn->res;
+    struct atc_res * response = &conn->res;
+    response->type = atc_ack;
+    response->msg.return_code = 0;
 	switch (conn->req.type){
 		case atc_speed_up:
-		response.type = atc_ack;
-    	if (set(speed_down, &(conn->req.plane)) == -1){
-    		response.msg.return_code = -1;
+    	if (set(speed_up, &(conn->req.plane)) == -1){
+    		response->msg.return_code = -1;
     	}
 		break;
+
     	case atc_speed_down:
-    	response.type = atc_ack;
     	if(set(speed_down, &(conn->req.plane)) == -1){
-    		response.msg.return_code = -1;
+    		response->msg.return_code = -1;
     	}
     	break;
+
     	case atc_turn_left:
-    	response.type = atc_ack;
     	if(set(turn_left, &(conn->req.plane)) == -1){
-    		response.msg.return_code = -1;
+    		response->msg.return_code = -1;
     	}
     	break;
+
     	case atc_turn_right:
-    	response.type = atc_ack;
     	if(set(turn_right, &(conn->req.plane)) == -1){
-    		response.msg.return_code = -1;
+    		response->msg.return_code = -1;
     	}
     	break;
+
     	case atc_ascend:
-    	response.type = atc_ack;
     	if (set(climb, &(conn->req.plane)) == -1){
-    		response.msg.return_code = -1;
+    		response->msg.return_code = -1;
     	}
     	break;
+
     	case atc_descend:
-    	response.type = atc_ack;
     	if(set(descend, &(conn->req.plane)) == -1){
-    		response.msg.return_code = -1;
+    		response->msg.return_code = -1;
     	}
     	break;
+
     	case atc_get_planes:
-    	response.type = atc_planes;
-    	aux = get_airplanes(response.msg.planes);
+    	response->type = atc_planes;
+    	aux = get_airplanes(response->msg.planes);
         if (aux == -1){
-            response.msg.return_code = -1;
+            response->msg.return_code = -1;
         }else{
-            response.len.planes = aux;
+            response->len.planes = aux;
         }
     	break;
+
     	case atc_get_airports:
-    	response.type = atc_airports;
-    	response.len.airports = get_airports(response.msg.airports);
+    	response->type = atc_airports;
+    	response->len.airports = get_airports(response->msg.airports);
     	break;
+
     	case atc_get_landed:
-    	response.type = atc_ack;
+    	response->type = atc_ack;
         aux = get_landed();
         if (aux == -1){
-            response.msg.return_code = -1;
+            response->msg.return_code = -1;
         }else{
-            response.len.planes = aux;
+            response->msg.return_code = aux;
         }
     	break;
+
     	case atc_get_crashed:
-        response.type = atc_ack;
+        response->type = atc_ack;
     	aux = get_crashed();
         if (aux == -1){
-            response.msg.return_code = -1;
+            response->msg.return_code = -1;
         }else{
-            response.len.planes = aux;
+            response->msg.return_code = aux;
         }
     	break;
+
     	case atc_create_plane:
-    	response.type = atc_ack;
     	create_plane();
     	break;
+
     	case atc_join:
-    	response.type = atc_ack;
     	break;
+
     	case atc_leave:
-        response.type = atc_ack;
-    	exit(0);
+        puts("Hanging");
+        return -1;
     	break;
 	}
     return 0;

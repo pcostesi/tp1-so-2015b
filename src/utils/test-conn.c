@@ -55,24 +55,44 @@ int server(void)
 	return 0;
 }
 
+void request_planes(struct atc_conn * client)
+{
+	int idx;
+	client->req.type = atc_get_planes;
+	atc_request(client);
+	printf("Response type is %c\n", (char) client->res.type);
+	printf("Plane count is %d\n", client->res.len.planes);
+	for (idx = 0; idx < client->res.len.planes; idx++) {
+		printf("Plane id: %s\n", client->res.msg.planes[idx].id);
+	}
+}
+
+void request_airports(struct atc_conn * client)
+{
+	int idx;
+	client->req.type = atc_get_airports;
+	atc_request(client);
+	printf("Response type is %c\n", (char) client->res.type);
+	printf("Airport count is %d\n", client->res.len.airports);
+	for (idx = 0; idx < client->res.len.airports; idx++) {
+		printf("Airport  %3s: x %d, y %d\n",
+				client->res.msg.airports[idx].id,
+				client->res.msg.airports[idx].x,
+				client->res.msg.airports[idx].y);
+	}
+}
 
 int client(void)
 {
 	struct atc_conn client;
-	int idx;
 	puts("Starting client.");
 	if (atc_connect(&client) == -1) {
 		puts("Failed to connect.");
 		return -1;
 	}
 	puts("Requesting");
-	client.req.type = atc_join;
-	atc_request(&client);
-	printf("Response type is %c\n", (char) client.res.type);
-	printf("Plane count is %d\n", client.res.len.planes);
-	for (idx = 0; idx < client.res.len.planes; idx++) {
-		printf("Plane id: %s\n", client.res.msg.planes[idx].id);
-	}
+	request_planes(&client);
+	request_airports(&client);
 	puts("Ready.");
 	client.req.type = atc_leave;
 	atc_request(&client);
@@ -86,23 +106,27 @@ static int handle_server_response(struct atc_conn * conn)
 {
 	struct atc_req * req;
 	struct atc_res * res;
-	struct atc_plane planes[2];
+	struct atc_airport planes[2];
 	memset(planes, 0, sizeof(planes));
-	strncpy(planes[0].id, "HHD035", 6);
-	strncpy(planes[1].id, "ECT620", 6);
+	strncpy(planes[0].id, "HHD035", 3);
+	strncpy(planes[1].id, "ECT620", 3);
+	planes[0].x = 1;
+	planes[0].y = 1;
+	planes[0].x = 100;
+	planes[0].y = 100;
 
 	req = &conn->req;
 	res = &conn->res;
 
-	memcpy(res->msg.planes, planes, sizeof(planes));
+	memcpy(res->msg.airports, planes, sizeof(planes));
 
 	printf("- Received request %c.\n", (char) req->type);
 	if (req->type == atc_leave) {
 		return -1;
 	}
-	res->type = atc_planes;
-	res->len.planes = sizeof(planes) / sizeof(struct atc_plane);
-	printf("- Replying with %d planes\n", res->len.planes);
+	res->type = atc_airports;
+	res->len.planes = sizeof(planes) / sizeof(struct atc_airport);
+	printf("- Replying with %d planes\n", res->len.airports);
 	return 0;
 }
 

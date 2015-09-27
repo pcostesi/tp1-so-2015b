@@ -100,7 +100,7 @@ int set(enum atc_commands cmd, struct atc_plane *plane)
 						break;
 			default: return -1;
 		}
-	conn.req.plane = *plane;
+	memcpy(&conn.req.plane, plane, sizeof(struct atc_plane));
 	atc_request(&conn);
 	return conn.res.msg.return_code;
 }
