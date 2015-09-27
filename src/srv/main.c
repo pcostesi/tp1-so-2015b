@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-struct pid_list pids;
-struct atc_conn * serverConn;
+static struct pid_list pids;
+static struct atc_conn serverConn;
 
 int main(int argc, char ** arcv)
 {
@@ -25,6 +25,7 @@ int main(int argc, char ** arcv)
 
 void init_server(void){
     atc_init();
+    atc_srv_init(&serverConn);
     init_signal_handlers();
 }
 
@@ -120,10 +121,10 @@ void kill_client(pid_t pid){
 
 void listen_channels(void){
     struct atc_conn *childConn;
-	while (!atc_listen(serverConn)){
+	while (!atc_listen(&serverConn)){
 	}
     childConn = malloc(sizeof(struct atc_conn));
-	atc_accept(serverConn, childConn);
+	atc_accept(&serverConn, childConn);
     fork_client(childConn);
 	return;
 }

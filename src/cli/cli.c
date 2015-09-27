@@ -23,7 +23,7 @@ void init_signal_handler(void){
 void cli_sigint_handler(int sig){
 	conn.req.type = atc_leave;
 	atc_request(&conn);
-	atc_close(&conn);
+	atc_close(&conn);	
 }
 
 int get_airplanes(struct atc_plane buff[])
