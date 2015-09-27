@@ -3,9 +3,9 @@
 #include <math.h>
 #include <stdlib.h>
 
-int atcd_test(void)
+int atc_deinit(void)
 {
-    return 5;
+    return 42;
 }
 /*Static headers*/
 

@@ -5,12 +5,21 @@
 #include <time.h>
 #include "atcd.h"
 #include "atcc.h"
+#include <signal.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static struct atc_state state;
 static struct atc_ui ui;
 
+void init_signal_handler(void);
+void cli_sigint_handler(int sig);
+
+
 int main(int argc, char ** argv)
 {
+	init_signal_handler();
 	atc_init();
 	init_UI();
 	init_time();
@@ -21,9 +30,25 @@ int main(int argc, char ** argv)
 		draw_UI();
 		input(wgetch(ui.cmd_log));
 	}
+	atc_deinit();
 	dispose_UI();
     return 0;
 }
+
+
+void init_signal_handler(void){
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = cli_sigint_handler;
+    sigaction(SIGINT, &sa, NULL);
+}
+
+void cli_sigint_handler(int sig){
+	atc_deinit();
+	dispose_UI();
+	exit(0);
+}
+
 
 void init_time(void){
 	state.tick_time = time(NULL);

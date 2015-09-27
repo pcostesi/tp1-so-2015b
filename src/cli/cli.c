@@ -3,27 +3,22 @@
 #include "protocol.h"
 #include <signal.h>
 #include <string.h>
+#include <stdio.h>
 
 static struct atc_conn conn;
 
 int atc_init(void)
 {
-	init_signal_handler();
 	conn.req.type = atc_join;
 	return atc_connect(&conn);
 }
 
-void init_signal_handler(void){
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = cli_sigint_handler;
-    sigaction(SIGINT, &sa, NULL);
-}
-
-void cli_sigint_handler(int sig){
+int atc_deinit(void)
+{
 	conn.req.type = atc_leave;
 	atc_request(&conn);
-	atc_close(&conn);	
+	atc_close(&conn);
+	return 0;
 }
 
 int get_airplanes(struct atc_plane buff[])

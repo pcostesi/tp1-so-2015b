@@ -57,6 +57,8 @@ int get_airplanes(struct atc_plane buffer[]);
 
 int atc_init(void);
 
+int atc_deinit(void);
+
 void create_plane(void);
 
 int get_crashed(void);
