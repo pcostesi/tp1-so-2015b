@@ -37,7 +37,10 @@ int server(void)
 		switch (fork()) {
 			case 0:
 			puts("connected.");
-			atc_reply(&client, (atc_reply_handler) handle_server_response);
+			while (atc_reply(&client, (atc_reply_handler) handle_server_response) != -1) {
+				puts("Sent.");
+			};
+			puts("Connection closed.");
 			atc_close(&client);
 			break;
 
@@ -71,6 +74,9 @@ int client(void)
 		printf("Plane id: %s\n", client.res.msg.planes[idx].id);
 	}
 	puts("Ready.");
+	client.req.type = atc_leave;
+	atc_request(&client);
+	puts("Left");
 	atc_close(&client);
 	return 0;
 }
@@ -91,6 +97,9 @@ static int handle_server_response(struct atc_conn * conn)
 	memcpy(res->msg.planes, planes, sizeof(planes));
 
 	printf("- Received request %c.\n", (char) req->type);
+	if (req->type == atc_leave) {
+		return -1;
+	}
 	res->type = atc_planes;
 	res->len.planes = sizeof(planes) / sizeof(struct atc_plane);
 	printf("- Replying with %d planes\n", res->len.planes);
