@@ -31,6 +31,7 @@ int atc_connect(struct atc_conn * conn)
 
 int atc_listen(struct atc_conn * conn)
 {
+    if (transport_serv_init(&conn->addr) == -1) return -1;
     return transport_listen(&conn->addr);
 }
 
@@ -186,6 +187,7 @@ int atc_reply(struct atc_conn * conn, atc_reply_handler handler)
     response = transport_recv(&conn->addr, buffer, sizeof(buffer));
 
     atc_wire_to_req(&conn->req, buffer);
+    memset(&conn->res, 0, sizeof(conn->res));
     if (handler(conn) == -1) {
         conn->res.type = atc_ack;
         conn->res.msg.return_code = -1;

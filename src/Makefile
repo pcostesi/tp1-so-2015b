@@ -49,6 +49,7 @@ SRV_BIN=${BIN}/$(SRV)-$(BACKEND)
 CLI_BIN=${BIN}/$(CLI)-$(BACKEND)
 ATC_BIN=${BIN}/$(ATC)
 DUMPDB=${BIN}/pplanes
+TESTCONN=${BIN}/test-conn
 
 .DEFAULT_GOAL := all
 
@@ -87,10 +88,13 @@ run:	$(CLI) $(SRV) $(ATC)
 test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p ${BIN}/test
 	
+$(TESTCONN):	utils/test-conn.o $(COMM)
+	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^
+
 $(DUMPDB):	utils/pplanes.o $(STOOBJ)
 	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^
 
-tools: $(DUMPDB) test
+tools: $(DUMPDB) test $(TESTCONN)
 
 .PHONY: clean run all $(SRV) $(CLI) test tools
 

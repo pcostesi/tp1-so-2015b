@@ -22,9 +22,9 @@ enum atc_req_type {
 };
 
 enum atc_res_type {
-    atc_ack,
-    atc_planes,
-    atc_airports
+    atc_ack = 'a',
+    atc_planes = 'p',
+    atc_airports = 'c'
 };
 
 struct atc_req {
