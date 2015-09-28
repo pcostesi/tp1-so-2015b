@@ -74,7 +74,7 @@ void fork_client(struct atc_conn * conn){
 	pid_t child_pid = fork();
     struct pid_node * node;
 	if (child_pid == 0){
-        printf("Waiting for requests in pid %d ...\n", child_pid);
+        printf("Waiting for requests in pid %d ...\n", getpid());
 		listen_child_channels(conn);
 	}else{
 		node = (struct pid_node *) malloc(sizeof(struct pid_node));

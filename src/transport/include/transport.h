@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <sys/types.h>
+#include <mqueue.h>
 
 enum transport_conn_type {
     transport_conn_socket,
@@ -20,7 +21,7 @@ struct transport_addr {
             void * zone;
             key_t key;
         } shmem;
-        /*mqd_t mqueue;*/
+        mqd_t mqueue;
     } conn;
 };
 
