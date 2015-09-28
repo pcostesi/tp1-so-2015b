@@ -16,7 +16,8 @@ struct transport_addr {
     union {
         int sockfd;
         void * shmem;
-        mqd_t mqueue;
+   /*    mqd_t mqueue;*/
+        int fifo_fd[2]; /*0 is in, 1 out*/
     } conn;
 };
 
