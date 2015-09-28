@@ -21,6 +21,7 @@ struct transport_addr {
         int fifo_fd[2]; /*0 is in, 1 out*/
         struct {
             int i_am_the_server;
+            int connected;
             int fd;
             int no;
             char * zone;

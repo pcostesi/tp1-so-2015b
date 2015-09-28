@@ -45,16 +45,18 @@ static int _shm_connect(struct transport_addr * addr)
 	addr->conn.shmem.zone = ptr;
 	addr->conn.shmem.no = 0;
 	if (_shm_locks(addr) == -1) return -1;
+	addr->conn.shmem.connected = 1;
 	return shm_fd;
 }
 
 static int _shm_close(struct transport_addr * addr)
 {
+	if (addr->conn.shmem.connected != 1) return -1;
 	if (close(addr->conn.shmem.fd) == -1) return -1;
 	if (shm_unlink(addr->conn.shmem.name) == -1) return -1;
 	if (munmap(addr->conn.shmem.zone, ATC_SHM_SIZE) == -1) return -1;
-	free(addr->conn.shmem.zone);
 	addr->conn.shmem.zone = NULL;
+	addr->conn.shmem.connected = 0;
 	return 0;
 }
 
@@ -65,7 +67,7 @@ static int _shm_update_addr(struct transport_addr * addr)
 		_shm_close(addr);
 		return -1;
 	}
-	//_shm_close(addr);
+	_shm_close(addr);
 	if (snprintf(addr->conn.shmem.name, sizeof(addr->conn.shmem.name), "/atc_conn_%d", buffer) == -1)
 		return -1;
 	addr->conn.shmem.no = buffer;
@@ -92,7 +94,24 @@ static int _shm_locks(struct transport_addr * addr)
 
 static int _shm_unlocks(struct transport_addr * addr)
 {
-	return 0; //-1;
+	char buffer[256];
+	snprintf(buffer, sizeof(buffer), ATC_SEND_SRV, addr->conn.shmem.no);
+	if (sem_unlink(buffer) == -1) return -1;
+	if (sem_close(addr->conn.shmem.send_srv) == -1) return -1;
+
+	snprintf(buffer, sizeof(buffer), ATC_SEND_CLI, addr->conn.shmem.no);
+	if (sem_unlink(buffer) == -1) return -1;
+	if (sem_close(addr->conn.shmem.send_cli) == -1) return -1;
+
+	snprintf(buffer, sizeof(buffer), ATC_RECV_SRV, addr->conn.shmem.no);
+	if (sem_unlink(buffer) == -1) return -1;
+	if (sem_close(addr->conn.shmem.recv_srv) == -1) return -1;
+
+	snprintf(buffer, sizeof(buffer), ATC_RECV_CLI, addr->conn.shmem.no);
+	if (sem_unlink(buffer) == -1) return -1;
+	if (sem_close(addr->conn.shmem.recv_cli) == -1) return -1;
+
+	return 0;
 }
 
 int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t size)
