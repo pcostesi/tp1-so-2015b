@@ -18,11 +18,11 @@ struct transport_addr {
     union {
         int sockfd;
         int fifo_fd[2]; /*0 is in, 1 out*/
+        mqd_t mqueue[2];
         struct {
             void * zone;
             key_t key;
         } shmem;
-        mqd_t mqueue;
     } conn;
 };
 
