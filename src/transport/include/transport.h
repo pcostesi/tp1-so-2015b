@@ -2,6 +2,7 @@
 #define __TRANSPORT_CONN 1
 
 #include <stddef.h>
+#include <sys/types.h>
 
 enum transport_conn_type {
     transport_conn_socket,
@@ -15,8 +16,11 @@ struct transport_addr {
     enum transport_conn_type type;
     union {
         int sockfd;
-        void * shmem;
-        mqd_t mqueue;
+        struct {
+            void * zone;
+            key_t key;
+        } shmem;
+        /*mqd_t mqueue;*/
     } conn;
 };
 
