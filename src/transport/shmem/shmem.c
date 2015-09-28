@@ -92,7 +92,7 @@ static int _shm_locks(struct transport_addr * addr)
 
 static int _shm_unlocks(struct transport_addr * addr)
 {
-	return -1;
+	return 0; //-1;
 }
 
 int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t size)
@@ -111,9 +111,9 @@ int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t 
 	bytes = size;
 
 	if (addr->conn.shmem.i_am_the_server) {
-		sem_post(addr->conn.shmem.send_srv);
+		sem_post(addr->conn.shmem.recv_cli);
 	} else {
-		sem_post(addr->conn.shmem.send_cli);
+		sem_post(addr->conn.shmem.recv_srv);
 	}
 
 	return bytes;
@@ -135,9 +135,9 @@ int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t 
 	bytes = size;
 
 	if (addr->conn.shmem.i_am_the_server) {
-		sem_post(addr->conn.shmem.recv_srv);
+		sem_post(addr->conn.shmem.send_cli);
 	} else {
-		sem_post(addr->conn.shmem.recv_cli);
+		sem_post(addr->conn.shmem.send_srv);
 	}
 	return bytes;
 }
