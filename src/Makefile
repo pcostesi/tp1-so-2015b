@@ -15,9 +15,15 @@ BIN=../bin
 
 PPFLAGS=-DCOMM_BACKEND_$(BACKEND_UPPER)=1 -DCOMM_BACKEND=$(BACKEND)
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(CFLAGS) $(PPFLAGS) $(INCLUDES)
-LDFLAGS+=-lm
-LIBS= ncurses m
-LINKS=$(foreach lib,$(LIBS),-l$(lib))
+LDFLAGS+=
+LIBS=ncurses m pthread
+
+OS := $(shell uname -s)
+ifeq ($(OS),Linux)
+    LIBS += rt
+endif
+
+LFLAGS=$(foreach lib,$(LIBS),-l$(lib))
 
 TESTSRC=$(wildcard test/*.c)
 ATCCSRC=$(wildcard atcc/*.c)
@@ -63,17 +69,17 @@ $(CLI):	$(CLI_BIN)
 
 $(CLI_BIN):	$(COMM) $(CLIOBJ) $(ATCCOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LFLAGS)
 
 $(SRV): $(SRV_BIN)
 
 $(SRV_BIN):	$(COMM) $(SRVOBJ) $(ATCDOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LFLAGS)
 
 $(ATC_BIN):	$(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p $(BIN)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LINKS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LFLAGS)
 
 $(ATC):	$(ATC_BIN)
 
@@ -89,10 +95,10 @@ test:	$(TESTOBJ) $(ATCCOBJ) $(ATCDOBJ)
 	@mkdir -p ${BIN}/test
 	
 $(TESTCONN):	utils/test-conn.o $(COMM)
-	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^
+	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^ $(LFLAGS)
 
 $(DUMPDB):	utils/pplanes.o $(STOOBJ)
-	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^
+	$(CC) $(LDFLAGS) -o ${BIN}/$@ $^ $(LFLAGS)
 
 tools: $(DUMPDB) test $(TESTCONN)
 

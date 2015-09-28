@@ -1,19 +1,15 @@
 #ifndef __MSGQ
 #define __MSGQ 1
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <mqueue.h>
-
 #define SRV_NAME "/ATC_Server"
 #define NO_PRIORITY 0
-#define QUEUE_SIZE 100
+#define QUEUE_SIZE 1
 #define MSG_SIZE 2048
-#define LISTEN_ALL 0;
+#define LISTEN_ALL 0
 
 struct msg_info{
 	long mtype;
-	char mtext[MSG_SIZE];
+	unsigned char * mtext;
 };
 
 #endif
