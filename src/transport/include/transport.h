@@ -17,7 +17,6 @@ struct transport_addr {
     enum transport_conn_type type;
     union {
         int sockfd;
-        void * shmem;
         int fifo_fd[2]; /*0 is in, 1 out*/
         struct {
             void * zone;

@@ -8,15 +8,15 @@
 #include "transport.h"
 #include <unistd.h>
 #include <errno.h>
+#include <sys/types.h>
+
+#define ALL_RW S_IRWXU|S_IRWXG|S_IRWXO
 
 
-#define CONN_MSG_SIZE 20
-
-static void _next_fifo_name(char buff[]);
-
-static uint32_t fifo_name_indx;
-static char* fifo_aux_name = "/tmp/fifo-num-";
-static char* fifo_conn_req = "/tmp/atc_fifo";
+static char fifo_name_indx;
+static char inc_fifo[] = "/tmp/scfinc";
+static char srv_to_cli[] = "/tmp/scfifo";
+static char cli_to_srv[] = "/tmp/csfifo";
 
 int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t size)
 {
@@ -30,36 +30,41 @@ int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t 
 }
 
 
-int transport_connect(struct transport_addr * addr)
+int transport_accept(struct transport_addr * listen, struct transport_addr *accepts)
 {
-	char name_buff[CONN_MSG_SIZE] = {0};
-	int fd, new_cli_in_fd, aux;
-	fd = open(fifo_conn_req, O_WRONLY);
+	int fd, new_serv_out_fd, new_serv_in_fd;
+	fd = open(inc_fifo, O_RDONLY);
 	if(fd == -1){
 		return fd;
 	}
-	_next_fifo_name(name_buff);
-	if ( access(name_buff, 0) == -1 && mknod(name_buff, S_IFIFO|0666, 0) == -1 ){
-			return -1;
+	printf("%s", "Connection request detected \n");
+	new_serv_out_fd = open(srv_to_cli, O_WRONLY);
+	new_serv_in_fd = open(cli_to_srv, O_RDONLY);
+	if(new_serv_out_fd == -1 || new_serv_in_fd == -1){
+		return -1;
 	}
-	aux = write(fd, name_buff, sizeof(name_buff));
-	if(aux == -1){
-		return aux;
-	}
-	/*Opening clients IN fifo*/
-	new_cli_in_fd = open(name_buff, O_RDONLY, 0);
-	aux = read(new_cli_in_fd, name_buff, sizeof(name_buff));
-	if(aux == -1){
-		return aux;
-	}
-	/*Opening Clients OUT Fifo*/
-	fd = open(name_buff, O_RDONLY, 0);
-	if(fd == -1){
+	accepts->type = transport_conn_fifo;
+	accepts->conn.fifo_fd[0] = new_serv_in_fd;
+	accepts->conn.fifo_fd[1] = new_serv_out_fd;
+	return 0;
+
+}
+
+
+int transport_connect(struct transport_addr * addr)
+{
+	int fd, new_cli_out_fd, new_cli_in_fd;
+	fd = open(inc_fifo, O_WRONLY);
+	printf("%s", "Connection request detected \n");
+	new_cli_in_fd = open(srv_to_cli, O_RDONLY);
+	new_cli_out_fd = open(cli_to_srv, O_WRONLY);
+	if(new_cli_in_fd == -1 || new_cli_out_fd == -1){
 		return -1;
 	}
 	addr->type = transport_conn_fifo;
 	addr->conn.fifo_fd[0] = new_cli_in_fd;
-	addr->conn.fifo_fd[1] = fd;
+	addr->conn.fifo_fd[1] = new_cli_out_fd;
+	close(fd);
 	return 0;
 
 }
@@ -80,59 +85,19 @@ int transport_close(struct transport_addr * addr)
 
 int transport_serv_init(struct transport_addr * addr)
 {
-	fifo_name_indx = 0;
+	fifo_name_indx = 32;
 	addr->type = transport_conn_fifo;
-	if ( access(fifo_conn_req, 0) == -1 && mknod(fifo_conn_req, S_IFIFO|0666, 0) == -1 ){
+	
+	if ( access(srv_to_cli, 0) == -1 && mkfifo(srv_to_cli, ALL_RW | S_IFIFO) == -1 ){
+			return -1;
+	}
+	if ( access(cli_to_srv, 0) == -1 && mkfifo(cli_to_srv, ALL_RW | S_IFIFO) == -1 ){
+			return -1;
+	}
+	if ( access(inc_fifo, 0) == -1 && mkfifo(inc_fifo, ALL_RW | S_IFIFO) == -1 ){
 			return -1;
 	}
 	return 0;
 }
 
 
-int transport_accept(struct transport_addr * listen, struct transport_addr *accepts)
-{
-	char name_buff[CONN_MSG_SIZE] = {0};
-	int fd, new_cli_in_fd, aux;
-	fd = open(fifo_conn_req, O_RDONLY);
-	printf("%s", "Connection request detected \n");
-	listen->conn.fifo_fd[0] = fd;
-	aux = read(fd, name_buff, sizeof(name_buff));
-	if(aux == -1){
-		return aux;
-	}
-	/*Opening clients IN fifo*/
-	new_cli_in_fd = open(name_buff, O_WRONLY);
-	_next_fifo_name(name_buff);
-	if ( access(name_buff, 0) == -1 && mknod(name_buff, S_IFIFO|0666, 0) == -1 ){
-			return -1;
-	}
-	aux = write(new_cli_in_fd, name_buff, sizeof(name_buff));
-	if(aux == -1){
-		return aux;
-	}
-	/*Opening Clients OUT Fifo*/
-
-	fd = open(name_buff, O_RDONLY, 0);
-	if(fd == -1){
-		return -1;
-	}
-	accepts->type = transport_conn_fifo;
-	accepts->conn.fifo_fd[0] = fd;
-	accepts->conn.fifo_fd[1] = new_cli_in_fd;
-	printf("%s", "Connection established with a client. \n");
-	return 0;
-}
-
-
-static void _next_fifo_name(char buff[])
-{
-
-	printf("%s", "Pisalo chicho!. \n");
-	strcat(buff, fifo_aux_name );
-	memcpy(buff+sizeof(fifo_aux_name), &fifo_name_indx, sizeof(fifo_name_indx));
-	fifo_name_indx++;
-
-	printf("%s", "Que lo pisaras joder!. \n");
-	printf("%s \n", buff);
-	return;
-}
