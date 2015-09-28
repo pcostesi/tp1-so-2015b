@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <time.h>
+
 
 #define ALL_RW S_IRWXU|S_IRWXG|S_IRWXO
 #define MAX_FIFO_NAME 35
@@ -94,6 +96,11 @@ int transport_accept(struct transport_addr * listen, struct transport_addr *acce
 
 int transport_connect(struct transport_addr * addr)
 {
+	new_fifo_index = getpid();
+
+	struct flock lock;
+	memset (&lock, 0, sizeof(lock));
+	lock.l_type = F_WRLCK;
 	char name_buffer[MAX_FIFO_NAME] = {0};
 	int fd, new_cli_out_fd, new_cli_in_fd, status;
 	/*Opens serv request Fifo*/
@@ -101,6 +108,7 @@ int transport_connect(struct transport_addr * addr)
 	if(fd == -1 ){
 		return -1;
 	}
+	fcntl (fd, F_SETLKW, &lock);
 
 	/*Sends client_in fifo name to srv and the opens it*/
 
@@ -115,6 +123,8 @@ int transport_connect(struct transport_addr * addr)
 		close(fd);
 		return status;
 	}	
+	lock.l_type = F_UNLCK;
+	 fcntl (fd, F_SETLKW, &lock);
 
 	new_cli_in_fd = open(name_buffer, O_RDONLY);
 	if(new_cli_in_fd == -1){
