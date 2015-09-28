@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include <mqueue.h>
+#include <semaphore.h>
 
 enum transport_conn_type {
     transport_conn_socket,
@@ -19,8 +20,15 @@ struct transport_addr {
         int sockfd;
         int fifo_fd[2]; /*0 is in, 1 out*/
         struct {
-            void * zone;
-            key_t key;
+            int i_am_the_server;
+            int fd;
+            int no;
+            char * zone;
+            char name[256];
+            sem_t * send_srv;
+            sem_t * recv_srv;
+            sem_t * send_cli;
+            sem_t * recv_cli;
         } shmem;
         mqd_t mqueue;
     } conn;
