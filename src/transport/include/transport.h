@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <sys/types.h>
-#include <mqueue.h>
+//#include <mqueue.h>
 #include <semaphore.h>
 
 enum transport_conn_type {
@@ -26,12 +26,12 @@ struct transport_addr {
             int no;
             char * zone;
             char name[256];
-            sem_t * send_srv;
-            sem_t * recv_srv;
-            sem_t * send_cli;
-            sem_t * recv_cli;
+            sem_t * data_srv;
+            sem_t * busy_srv;
+            sem_t * data_cli;
+            sem_t * busy_cli;
         } shmem;
-        mqd_t mqueue;
+//        mqd_t mqueue;
     } conn;
 };
 
