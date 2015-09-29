@@ -4,44 +4,54 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <stdlib.h>
 
 static struct mq_attr attr;
-static int mq_count = 0;
 
 int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t size){
-	return mq_send(addr->conn.mqueue[1], (char *)buffer, size, NO_PRIORITY);
+	int res = mq_send(addr->conn.mqueue[1], (char *)buffer, size, NO_PRIORITY);
+	if (res == -1){
+		perror("Fallo send");
+	}
+	return res;
 }
 
 int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t size){
-	return mq_receive(addr->conn.mqueue[0], (char *)buffer, size, NO_PRIORITY);
+	int res = mq_receive(addr->conn.mqueue[0], (char *)buffer, MSG_SIZE+1, NO_PRIORITY);
+	if (res == -1){
+		perror("Fallo en receive");
+	}
+	return res;
 }
 
 int transport_connect(struct transport_addr * addr){
-	mqd_t buffer[2], srv_out, srv_in;
+	char buffer[50], cli_in[100], cli_out[100];
+	int my_pid = getpid();
+	mqd_t srv_out, srv_in;
 
 	srv_in = mq_open(SRV_IN, O_RDWR);
-	if (srv_in == -1){
-		perror("FALLO CONNECT OPEN SRV");
-		return -1;
-	}
-	printf("send a srv in\n");
-	if ((mq_send(srv_in, "Connect to SRV", sizeof("Connect to SRV")+1, NO_PRIORITY)) == -1){
-		perror("FALLO CONNECT SEND");	
-		return -1;
-	}
-	printf("cierro srv in\n");
-	mq_close(srv_in);
-
-	printf("abro srv out\n");
 	srv_out = mq_open(SRV_OUT, O_RDWR);
+	if (srv_in == -1 || srv_out == -1){
+		perror("Falla en open de connect");
+		return -1;
+	}
+	if ((mq_send(srv_in, (char *) &my_pid, sizeof(int), NO_PRIORITY)) == -1){
+		perror("Falla en send a srv out");	
+		return -1;
+	}
 
-	printf("llego al receive\n");
-	mq_receive(srv_out, (char *)buffer, MSG_SIZE, NO_PRIORITY);
-	printf("salio del receive\n");
-	addr->conn.mqueue[0] = buffer[1];
-	addr->conn.mqueue[1] = buffer[0];
-	printf("IN:%d OUT:%d\n", addr->conn.mqueue[0], addr->conn.mqueue[1]);
+	mq_receive(srv_out, (char *)buffer, MSG_SIZE+1, NO_PRIORITY);
+	sprintf(cli_in, "/Cli_in_%d", my_pid);
+	sprintf(cli_out, "/Cli_out_%d", my_pid);
+	addr->conn.mqueue[0] = mq_open(cli_out, O_RDWR);
+	addr->conn.mqueue[1] = mq_open(cli_in, O_RDWR);
+	if (addr->conn.mqueue[0] == -1 || addr->conn.mqueue[1] == -1){
+		perror("Falla en open de mqs del cli");
+	}
+	/*printf("IN:%d OUT:%d\n", addr->conn.mqueue[0], addr->conn.mqueue[1]);*/
+
+	mq_close(srv_in);
 	mq_close(srv_out);
 	return 0;
 }
@@ -62,27 +72,29 @@ int transport_serv_init(struct transport_addr * addr){
 	addr->conn.mqueue[0] = mq_open(SRV_IN, O_RDWR|O_CREAT, 0666, &attr);
 	addr->conn.mqueue[1] = mq_open(SRV_OUT, O_RDWR|O_CREAT, 0666, &attr);
 	if (addr->conn.mqueue[0] == -1 || addr->conn.mqueue[1] == -1){
+		perror("Falla en open de srv init");
 		return -1;
 	}	
 	return 0;
 }
 
 int transport_accept(struct transport_addr * listen, struct transport_addr *accepts){
-	char buffer[50], cli_in[100], cli_out[100];
+	char cli_in[100], cli_out[100];
+	int child_pid;
 
-	printf("Viene receive");
-	mq_receive(listen->conn.mqueue[0], buffer, MSG_SIZE+1, NO_PRIORITY);
-	printf("Sale receive");
+	mq_receive(listen->conn.mqueue[0], (char *)&child_pid, MSG_SIZE+1, NO_PRIORITY);
+	printf("Conexion aceptada...\n");
 
-	sprintf(cli_in, "/Cli_in_%d", mq_count);
-	sprintf(cli_out, "/Cli_out_%d", mq_count++);
+	sprintf(cli_in, "/Cli_in_%d", child_pid);
+	sprintf(cli_out, "/Cli_out_%d", child_pid);
 	accepts->conn.mqueue[0] = mq_open(cli_in, O_CREAT|O_RDWR, 0666, &attr);
 	accepts->conn.mqueue[1] = mq_open(cli_out, O_CREAT|O_RDWR, 0666, &attr);
 	if (accepts->conn.mqueue[0] == -1 || accepts->conn.mqueue[1] == -1){
+		perror("Falla en open de accept");
 		return -1;
 	}
 
-	printf("IN:%d OUT:%d\n", accepts->conn.mqueue[0], accepts->conn.mqueue[1]);
-	mq_send(listen->conn.mqueue[1], (char *)(accepts->conn.mqueue), sizeof(accepts->conn.mqueue), NO_PRIORITY);
+	/*printf("IN:%d OUT:%d\n", accepts->conn.mqueue[0], accepts->conn.mqueue[1]);*/
+	mq_send(listen->conn.mqueue[1], "Accepted", sizeof("Accepted")+1, NO_PRIORITY);
 	return 0;
 }
