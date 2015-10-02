@@ -12,14 +12,16 @@
 #include "transport.h"
 
 /* Dirty little secret - We're cheating here by using a msg-sized buffer */
-#define SHM_SIZE (1024 * 2)
+#define SHM_SIZE (1024 * 2 * 2)
 #define SHM_LISTEN_SIZE (sizeof(int))
 #define SHM_LISTEN_ADDR "/SHM_LISTEN"
 #define SHM_LISTEN_AVAILABLE "/SHM_LISTEN_SRV"
 #define SHM_LISTEN_FREE "/SHM_LISTEN_CLI"
 #define SHM_CONNECT_ADDR "/SHM_SOCK_%d"
-#define SHM_CONNECT_AVAILABLE "/SHM_SOCK_%d_available"
-#define SHM_CONNECT_FREE "/SHM_SOCK_%d_free"
+#define SHM_CONNECT_AVAILABLE_SRV "/SHM_SOCK_%d_available_srv"
+#define SHM_CONNECT_FREE_SRV "/SHM_SOCK_%d_free_srv"
+#define SHM_CONNECT_AVAILABLE_CLI "/SHM_SOCK_%d_available_cli"
+#define SHM_CONNECT_FREE_CLI "/SHM_SOCK_%d_free_cli"
 #define GUARD(A)	do { if ((A) == -1) { assert((A) != -1); return -1; } } while(0)
 #define GUARD_SEM(A)	do { if ((A) == SEM_FAILED) { assert((A) != SEM_FAILED); return -1; } } while(0)
 
@@ -109,13 +111,21 @@ static int _shm_setup_locks(struct transport_addr * addr)
 {
     char lock[256];
 
-    snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE, addr->conn.shmem.port);
-    addr->conn.shmem.locks.listen.available = sem_open(lock, O_RDWR | O_CREAT, 0666, 0);
-    GUARD_SEM(addr->conn.shmem.locks.listen.available);
+    snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_SRV, addr->conn.shmem.port);
+    addr->conn.shmem.locks.connection.available_srv = sem_open(lock, O_RDWR | O_CREAT, 0666, 0);
+    GUARD_SEM(addr->conn.shmem.locks.connection.available_srv);
 
-    snprintf(lock, sizeof(lock), SHM_CONNECT_FREE, addr->conn.shmem.port);
-    addr->conn.shmem.locks.listen.free = sem_open(lock, O_RDWR | O_CREAT, 0666, 1);
-    GUARD_SEM(addr->conn.shmem.locks.listen.free);
+    snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_SRV, addr->conn.shmem.port);
+    addr->conn.shmem.locks.connection.free_srv = sem_open(lock, O_RDWR | O_CREAT, 0666, SHM_SIZE / 2);
+    GUARD_SEM(addr->conn.shmem.locks.connection.free_srv);
+
+    snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_CLI, addr->conn.shmem.port);
+    addr->conn.shmem.locks.connection.available_cli = sem_open(lock, O_RDWR | O_CREAT, 0666, 0);
+    GUARD_SEM(addr->conn.shmem.locks.connection.available_cli);
+
+    snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_CLI, addr->conn.shmem.port);
+    addr->conn.shmem.locks.connection.free_cli = sem_open(lock, O_RDWR | O_CREAT, 0666, SHM_SIZE / 2);
+    GUARD_SEM(addr->conn.shmem.locks.connection.free_cli);
 
     return 0;
 }
@@ -124,13 +134,21 @@ static int _shm_unlocks(struct transport_addr * addr)
 {
     char lock[256];
 
-    snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE, addr->conn.shmem.port);
-    GUARD(sem_close(addr->conn.shmem.locks.listen.available));
-    addr->conn.shmem.locks.listen.available = NULL;
+    snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_SRV, addr->conn.shmem.port);
+    GUARD(sem_close(addr->conn.shmem.locks.connection.available_srv));
+    addr->conn.shmem.locks.connection.available_srv = NULL;
 
-    snprintf(lock, sizeof(lock), SHM_CONNECT_FREE, addr->conn.shmem.port);
-    GUARD(sem_close(addr->conn.shmem.locks.listen.free));
-    addr->conn.shmem.locks.listen.free = NULL;
+    snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_SRV, addr->conn.shmem.port);
+    GUARD(sem_close(addr->conn.shmem.locks.connection.free_srv));
+    addr->conn.shmem.locks.connection.free_srv = NULL;
+
+    snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_CLI, addr->conn.shmem.port);
+    GUARD(sem_close(addr->conn.shmem.locks.connection.available_cli));
+    addr->conn.shmem.locks.connection.available_cli = NULL;
+
+    snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_CLI, addr->conn.shmem.port);
+    GUARD(sem_close(addr->conn.shmem.locks.connection.free_cli));
+    addr->conn.shmem.locks.connection.free_cli = NULL;
 
     return 0;
 }
@@ -243,8 +261,8 @@ int transport_accept(struct transport_addr * addr, struct transport_addr * worke
     worker->conn.shmem.port = addr->conn.shmem.port;
     addr->conn.shmem.port += 1;
     sem_post(addr->conn.shmem.locks.listen.available);
-    sem_wait(addr->conn.shmem.locks.listen.free);
 
+    sem_wait(addr->conn.shmem.locks.listen.free);
     GUARD(_shm_connect(worker));
     return 1;
 }
