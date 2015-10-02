@@ -1,4 +1,5 @@
 #include "protocol.h"
+#include <assert.h>
 #include "atcd.h"
 #include <stdio.h>
 #include <string.h>
@@ -31,9 +32,12 @@ int server(void)
 	struct atc_conn server;
 	struct atc_conn client;
 	puts("Starting server.");
-	atc_listen(&server);
+	if (atc_listen(&server) == -1) {
+            perror("listen");
+            return -1;
+        };
 	puts("Waiting for clients.");
-	while (atc_accept(&server, &client)) {
+	while (atc_accept(&server, &client) != -1) {
 		switch (fork()) {
 			case 0:
 			puts("connected.");
@@ -52,6 +56,7 @@ int server(void)
 		}	
 	}
 	atc_close(&server);
+        puts("Quitting.");
 	return 0;
 }
 

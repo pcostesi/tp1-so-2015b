@@ -21,15 +21,23 @@ struct transport_addr {
         int fifo_fd[2]; /*0 is in, 1 out*/
         struct {
             int i_am_the_server;
+            int i_am_the_listen;
             int connected;
             int fd;
-            int no;
+            int port;
             char * zone;
-            char name[256];
-            sem_t * data_srv;
-            sem_t * busy_srv;
-            sem_t * data_cli;
-            sem_t * busy_cli;
+            struct {
+                union {
+                    sem_t * available;
+                    sem_t * free;
+                } listen;
+                union {
+                    sem_t * available_srv;
+                    sem_t * available_cli;
+                    sem_t * free_srv;
+                    sem_t * free_cli;
+                } connection;
+            } locks;
         } shmem;
 //        mqd_t mqueue;
     } conn;
