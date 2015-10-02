@@ -86,7 +86,7 @@ $(ATC):	$(ATC_BIN)
 clean:
 	rm -rf ${BIN}/*
 	rm -rf *.a *.log
-	find ./ -name *.o -exec rm {} \;
+	find ./ -name *.o -exec rm -v {} \;
 
 run:	$(CLI) $(SRV) $(ATC)
 	valgrind $< > $<.log &
