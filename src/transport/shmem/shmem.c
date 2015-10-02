@@ -12,7 +12,10 @@
 #include "transport.h"
 
 /* Dirty little secret - We're cheating here by using a msg-sized buffer */
-#define SHM_SIZE (1024 * 2 * 2)
+#define ZONE_SIZE (1024 * 2)
+#define SHM_SIZE (ZONE_SIZE * 2)
+#define SRV_BASE ((char *) 0)
+#define CLI_BASE ((char *) (ZONE_SIZE))
 #define SHM_LISTEN_SIZE (sizeof(int))
 #define SHM_LISTEN_ADDR "/SHM_LISTEN"
 #define SHM_LISTEN_AVAILABLE "/SHM_LISTEN_SRV"
@@ -31,10 +34,6 @@ static int _shm_connect(struct transport_addr * addr);
 static int _shm_close(struct transport_addr * addr);
 static int _shm_setup_locks(struct transport_addr * addr);
 static int _shm_unlocks(struct transport_addr * addr);
-static int _shm_lock_for_reading(struct transport_addr * addr);
-static int _shm_lock_for_writing(struct transport_addr * addr);
-static int _shm_unlock_after_reading(struct transport_addr * addr);
-static int _shm_unlock_after_writing(struct transport_addr * addr);
 
 static int _shm_open_listen(struct transport_addr * addr)
 {
@@ -58,7 +57,6 @@ static int _shm_open_listen(struct transport_addr * addr)
 
 static int _shm_close_listen(struct transport_addr * addr)
 {
-    printf("shmem fd %d\n", addr->conn.shmem.fd);
     GUARD(close(addr->conn.shmem.fd));
     GUARD(munmap(addr->conn.shmem.zone, SHM_LISTEN_SIZE));
     addr->conn.shmem.zone = NULL;
@@ -89,6 +87,8 @@ static int _shm_connect(struct transport_addr * addr)
     addr->conn.shmem.zone = ptr;
     GUARD(_shm_setup_locks(addr));
     addr->conn.shmem.connected = 1;
+    addr->conn.shmem.rd = 0;
+    addr->conn.shmem.wr = 0;
     return shm_fd;
 }
 
@@ -116,7 +116,7 @@ static int _shm_setup_locks(struct transport_addr * addr)
     GUARD_SEM(addr->conn.shmem.locks.connection.available_srv);
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_SRV, addr->conn.shmem.port);
-    addr->conn.shmem.locks.connection.free_srv = sem_open(lock, O_RDWR | O_CREAT, 0666, SHM_SIZE / 2);
+    addr->conn.shmem.locks.connection.free_srv = sem_open(lock, O_RDWR | O_CREAT, 0666, ZONE_SIZE);
     GUARD_SEM(addr->conn.shmem.locks.connection.free_srv);
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_CLI, addr->conn.shmem.port);
@@ -124,7 +124,7 @@ static int _shm_setup_locks(struct transport_addr * addr)
     GUARD_SEM(addr->conn.shmem.locks.connection.available_cli);
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_CLI, addr->conn.shmem.port);
-    addr->conn.shmem.locks.connection.free_cli = sem_open(lock, O_RDWR | O_CREAT, 0666, SHM_SIZE / 2);
+    addr->conn.shmem.locks.connection.free_cli = sem_open(lock, O_RDWR | O_CREAT, 0666, ZONE_SIZE);
     GUARD_SEM(addr->conn.shmem.locks.connection.free_cli);
 
     return 0;
@@ -153,48 +153,66 @@ static int _shm_unlocks(struct transport_addr * addr)
     return 0;
 }
 
-static int _shm_lock_for_reading(struct transport_addr * addr)
-{
-    return -1;
-}
-
-static int _shm_lock_for_writing(struct transport_addr * addr)
-{
-    return -1;
-}
-
-static int _shm_unlock_after_reading(struct transport_addr * addr)
-{
-    return -1;
-}
-
-static int _shm_unlock_after_writing(struct transport_addr * addr)
-{
-    return -1;
-}
-
 int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t size)
 {
-    int bytes = -1;
+    int bytes = 0;
 
-    GUARD(_shm_lock_for_writing(addr));
-    size_t base_offset = addr->conn.shmem.i_am_the_server ? SHM_SIZE / 2 : 0;
-    memcpy(addr->conn.shmem.zone + base_offset, buffer, size);
-    bytes = size;
-    GUARD(_shm_unlock_after_writing(addr));
+    char * base_offset;
+    sem_t * available;
+    sem_t * free;
+
+    if (addr->conn.shmem.i_am_the_server) {
+        base_offset = SRV_BASE;
+        available = addr->conn.shmem.locks.connection.available_srv;
+        free = addr->conn.shmem.locks.connection.free_srv;
+    } else {
+        base_offset = CLI_BASE;
+        available = addr->conn.shmem.locks.connection.available_cli;
+        free = addr->conn.shmem.locks.connection.free_cli;
+    }
+
+    base_offset += (size_t) addr->conn.shmem.zone;
+    puts("getting ready to send a char");
+    while (bytes < size && sem_wait(free) != -1) {
+        puts("sending a char");
+        base_offset[addr->conn.shmem.wr] = buffer[bytes];
+        addr->conn.shmem.wr = (addr->conn.shmem.wr + 1) % ZONE_SIZE;
+        bytes += 1;
+        GUARD(sem_post(available));
+    }
+    printf("done sending %d chars\n", bytes);
 
     return bytes;
 }
 
 int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t size)
 {
-    int bytes = -1;
+    int bytes = 0;
 
-    GUARD(_shm_lock_for_reading(addr));
-    size_t base_offset = addr->conn.shmem.i_am_the_server ? 0 : SHM_SIZE / 2;
-    memcpy(buffer, addr->conn.shmem.zone + base_offset, size);
-    bytes = size;
-    GUARD(_shm_unlock_after_reading(addr));
+    char * base_offset;
+    sem_t * available;
+    sem_t * free;
+
+    if (addr->conn.shmem.i_am_the_server) {
+        base_offset = CLI_BASE;
+        available = addr->conn.shmem.locks.connection.available_cli;
+        free = addr->conn.shmem.locks.connection.free_cli;
+    } else {
+        base_offset = SRV_BASE;
+        available = addr->conn.shmem.locks.connection.available_srv;
+        free = addr->conn.shmem.locks.connection.free_srv;
+    }
+
+    puts("getting ready to read");
+    base_offset += (size_t) addr->conn.shmem.zone;
+    while (bytes < size && sem_wait(available) != -1) {
+        puts(":D");
+        buffer[bytes] = base_offset[addr->conn.shmem.rd];
+        addr->conn.shmem.rd = (addr->conn.shmem.rd + 1) % ZONE_SIZE;
+        bytes += 1;
+        GUARD(sem_post(free));
+    }
+    printf("done reading %d bytes\n", bytes);
 
     return bytes;
 }

@@ -26,12 +26,14 @@ struct transport_addr {
             int fd;
             int port;
             char * zone;
-            struct {
-                union {
+            size_t rd;
+            size_t wr;
+            union {
+                struct {
                     sem_t * available;
                     sem_t * free;
                 } listen;
-                union {
+                struct {
                     sem_t * available_srv;
                     sem_t * available_cli;
                     sem_t * free_srv;
