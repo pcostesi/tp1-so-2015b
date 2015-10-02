@@ -172,15 +172,12 @@ int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t 
     }
 
     base_offset += (size_t) addr->conn.shmem.zone;
-    puts("getting ready to send a char");
     while (bytes < size && sem_wait(free) != -1) {
-        puts("sending a char");
         base_offset[addr->conn.shmem.wr] = buffer[bytes];
         addr->conn.shmem.wr = (addr->conn.shmem.wr + 1) % ZONE_SIZE;
         bytes += 1;
         GUARD(sem_post(available));
     }
-    printf("done sending %d chars\n", bytes);
 
     return bytes;
 }
@@ -203,16 +200,13 @@ int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t 
         free = addr->conn.shmem.locks.connection.free_srv;
     }
 
-    puts("getting ready to read");
     base_offset += (size_t) addr->conn.shmem.zone;
     while (bytes < size && sem_wait(available) != -1) {
-        puts(":D");
         buffer[bytes] = base_offset[addr->conn.shmem.rd];
         addr->conn.shmem.rd = (addr->conn.shmem.rd + 1) % ZONE_SIZE;
         bytes += 1;
         GUARD(sem_post(free));
     }
-    printf("done reading %d bytes\n", bytes);
 
     return bytes;
 }
