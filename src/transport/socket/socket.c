@@ -13,7 +13,7 @@
 #include <signal.h>
 
 #define PORT "8080"
-#define IP "pcostesi.me"
+#define IP "localhost"
 
 
 int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t size)

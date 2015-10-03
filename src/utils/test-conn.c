@@ -2,35 +2,66 @@
 #include <assert.h>
 #include "atcd.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
-int server(void);
-int client(void);
+static struct atc_conn server;
+static struct atc_conn client;
+
+int server_fn(void);
+int client_fn(void);
 static int handle_server_response(struct atc_conn * conn);
+static void handle_kill(int signal);
 
 int main(int argc, char ** argv)
 {
+    int howmany = 1000;
     if (argc < 2) {
         printf("Usage: %s [server|client]\n", argv[0]);
         return 1;
     }
 
+    signal(SIGHUP, handle_kill);
+    signal(SIGINT, handle_kill);
+    signal(SIGQUIT, handle_kill);
+
     if (strcmp(argv[1], "server") == 0) {
-        return server();
+        return server_fn();
+    } else if (strcmp(argv[1], "bench") == 0) {
+        while (howmany --> 0) {
+            printf("Benching: %d to go \n", howmany);
+            client_fn();
+            sleep(1);
+            puts("");
+        }
+        return 0;
     } else if (strcmp(argv[1], "client") == 0) {
-        return client();
+        return client_fn();
     } else {
         printf("Invalid option: %s\n", argv[1]);
         return 1;
     }
+
     return -1;
 }
 
-
-int server(void)
+static void handle_kill(int sig)
 {
-    struct atc_conn server;
-    struct atc_conn client;
+    signal(SIGHUP, handle_kill);
+    signal(SIGINT, handle_kill);
+    signal(SIGQUIT, handle_kill);
+
+    atc_close(&server);
+    atc_close(&client);
+
+    puts("Bye.");
+    exit(0);
+} 
+
+int server_fn(void)
+{
+    int served = 0;
     puts("Starting server.");
     if (atc_listen(&server) == -1) {
         perror("listen");
@@ -38,15 +69,16 @@ int server(void)
     };
     puts("Waiting for clients.");
     while (atc_accept(&server, &client) != -1) {
+        printf("Serving client %d\n\n", ++served);
         switch (fork()) {
             case 0:
+                //atc_close(&server);
                 puts("connected.");
                 while (atc_reply(&client, (atc_reply_handler) handle_server_response) != -1) {
                     puts("Sent.");
                 };
                 puts("Connection closed.");
-                atc_close(&client);
-                break;
+                return atc_close(&client);
 
             case -1:
                 perror("accept");
@@ -54,7 +86,7 @@ int server(void)
 
             default:
                 atc_close(&client);
-        }	
+        }
     }
     atc_close(&server);
     puts("Quitting.");
@@ -88,9 +120,8 @@ void request_airports(struct atc_conn * client)
     }
 }
 
-int client(void)
+int client_fn(void)
 {
-    struct atc_conn client;
     puts("Starting client.");
     if (atc_connect(&client) == -1) {
         perror("Failed to connect");
@@ -171,6 +202,9 @@ static int handle_server_response(struct atc_conn * conn)
         return handle_planes_request(conn);
     } else if (req->type == atc_get_airports) {
         return handle_airport_request(conn);
+    } else if (req->type == atc_leave) {
+        puts("Client requested to leave the game.");
+        return -1;
     }
 
     puts("Unknown message");

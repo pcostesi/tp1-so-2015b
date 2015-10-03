@@ -12,10 +12,10 @@
 #include "transport.h"
 
 /* Dirty little secret - We're cheating here by using a msg-sized buffer */
-#define ZONE_SIZE (1024 * 2)
+#define ZONE_SIZE (10)
 #define SHM_SIZE (ZONE_SIZE * 2)
-#define SRV_BASE ((char *) 0)
-#define CLI_BASE ((char *) (ZONE_SIZE))
+#define SRV_BASE (0)
+#define CLI_BASE (ZONE_SIZE)
 #define SHM_LISTEN_SIZE (sizeof(int))
 #define SHM_LISTEN_ADDR "/SHM_LISTEN"
 #define SHM_LISTEN_AVAILABLE "/SHM_LISTEN_SRV"
@@ -28,19 +28,19 @@
 #define GUARD(A)	do { if ((A) == -1) { assert((A) != -1); return -1; } } while(0)
 #define GUARD_SEM(A)	do { if ((A) == SEM_FAILED) { assert((A) != SEM_FAILED); return -1; } } while(0)
 
-static int _shm_open_listen(struct transport_addr * addr);
+static int _shm_open_listen(struct transport_addr * addr, int flag);
 static int _shm_close_listen(struct transport_addr * addr);
 static int _shm_connect(struct transport_addr * addr);
 static int _shm_close(struct transport_addr * addr);
 static int _shm_setup_locks(struct transport_addr * addr);
 static int _shm_unlocks(struct transport_addr * addr);
 
-static int _shm_open_listen(struct transport_addr * addr)
+static int _shm_open_listen(struct transport_addr * addr, int flag)
 {
     int shm_fd;
     void * ptr;
 
-    shm_fd = shm_open(SHM_LISTEN_ADDR, O_RDWR | O_CREAT, 0666);
+    shm_fd = shm_open(SHM_LISTEN_ADDR, O_RDWR | flag, 0666);
     GUARD(shm_fd);
     ftruncate(shm_fd, SHM_LISTEN_SIZE);
 
@@ -97,9 +97,7 @@ static int _shm_close(struct transport_addr * addr)
     char addrname[256] = {0};
 
     snprintf(addrname, sizeof(addrname), SHM_CONNECT_ADDR, addr->conn.shmem.port);
-    if (!addr->conn.shmem.connected) return -1;
     GUARD(close(addr->conn.shmem.fd));
-    GUARD(shm_unlink(addrname));
     GUARD(munmap(addr->conn.shmem.zone, SHM_SIZE));
     GUARD(_shm_unlocks(addr));
     addr->conn.shmem.zone = NULL;
@@ -161,17 +159,18 @@ int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t 
     sem_t * available;
     sem_t * free;
 
+    base_offset = addr->conn.shmem.zone;
+    if (addr->conn.shmem.connected == 0) return -1;
     if (addr->conn.shmem.i_am_the_server) {
-        base_offset = SRV_BASE;
+        base_offset += SRV_BASE;
         available = addr->conn.shmem.locks.connection.available_srv;
         free = addr->conn.shmem.locks.connection.free_srv;
     } else {
-        base_offset = CLI_BASE;
+        base_offset += CLI_BASE;
         available = addr->conn.shmem.locks.connection.available_cli;
         free = addr->conn.shmem.locks.connection.free_cli;
     }
 
-    base_offset += (size_t) addr->conn.shmem.zone;
     while (bytes < size && sem_wait(free) != -1) {
         base_offset[addr->conn.shmem.wr] = buffer[bytes];
         addr->conn.shmem.wr = (addr->conn.shmem.wr + 1) % ZONE_SIZE;
@@ -190,17 +189,18 @@ int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t 
     sem_t * available;
     sem_t * free;
 
+    base_offset = addr->conn.shmem.zone;
+    if (addr->conn.shmem.connected == 0) return -1;
     if (addr->conn.shmem.i_am_the_server) {
-        base_offset = CLI_BASE;
+        base_offset += CLI_BASE;
         available = addr->conn.shmem.locks.connection.available_cli;
         free = addr->conn.shmem.locks.connection.free_cli;
     } else {
-        base_offset = SRV_BASE;
+        base_offset += SRV_BASE;
         available = addr->conn.shmem.locks.connection.available_srv;
         free = addr->conn.shmem.locks.connection.free_srv;
     }
 
-    base_offset += (size_t) addr->conn.shmem.zone;
     while (bytes < size && sem_wait(available) != -1) {
         buffer[bytes] = base_offset[addr->conn.shmem.rd];
         addr->conn.shmem.rd = (addr->conn.shmem.rd + 1) % ZONE_SIZE;
@@ -221,8 +221,11 @@ int transport_connect(struct transport_addr * addr)
     GUARD_SEM(available = sem_open(SHM_LISTEN_AVAILABLE, O_RDWR));
     GUARD_SEM(free = sem_open(SHM_LISTEN_FREE, O_RDWR));
 
-    GUARD(_shm_open_listen(addr));
-    sem_wait(available);
+    GUARD(_shm_open_listen(addr, 0));
+    if (sem_trywait(available) == -1) {
+        _shm_close_listen(addr);
+        return -1;
+    }
     memcpy(&addr->conn.shmem.port, addr->conn.shmem.zone, SHM_LISTEN_SIZE);
     GUARD(_shm_close_listen(addr));
     sem_post(free);
@@ -236,7 +239,7 @@ int transport_connect(struct transport_addr * addr)
 
 int transport_listen(struct transport_addr * addr)
 {
-    addr->conn.shmem.port = 0;
+    addr->conn.shmem.port = getpid();
     addr->conn.shmem.i_am_the_server = 1;
     addr->conn.shmem.i_am_the_listen = 1;
 
@@ -244,19 +247,27 @@ int transport_listen(struct transport_addr * addr)
     GUARD_SEM(addr->conn.shmem.locks.listen.available);
     addr->conn.shmem.locks.listen.free = sem_open(SHM_LISTEN_FREE, O_RDWR | O_CREAT, 0666, 0);
     GUARD_SEM(addr->conn.shmem.locks.listen.free);
-    GUARD(_shm_open_listen(addr));
+    GUARD(_shm_open_listen(addr, O_CREAT));
+    addr->conn.shmem.connected = 1;
 
     return 0;
 }
 
 int transport_close(struct transport_addr * addr)
 {
+    if (addr->conn.shmem.connected == 0) return 0;
+    addr->conn.shmem.connected = 0;
+
     if (addr->conn.shmem.i_am_the_listen) {
-        GUARD(_shm_close_listen(addr));
+        _shm_close_listen(addr);
+        sem_close(addr->conn.shmem.locks.listen.available);
+        sem_close(addr->conn.shmem.locks.listen.free);
+        shm_unlink(SHM_LISTEN_ADDR);
         return 0;
     }
     GUARD(_shm_close(addr));
-    return _shm_unlocks(addr);
+
+    return 0;
 }
 
 int transport_serv_init(struct transport_addr * addr)
@@ -269,6 +280,7 @@ int transport_serv_init(struct transport_addr * addr)
 
 int transport_accept(struct transport_addr * addr, struct transport_addr * worker)
 {
+    worker->conn.shmem.i_am_the_server = 1;
     memcpy(addr->conn.shmem.zone, &addr->conn.shmem.port, SHM_LISTEN_SIZE);
     worker->conn.shmem.port = addr->conn.shmem.port;
     addr->conn.shmem.port += 1;
