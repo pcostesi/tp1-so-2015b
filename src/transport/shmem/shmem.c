@@ -260,9 +260,9 @@ int transport_close(struct transport_addr * addr)
 
     if (addr->conn.shmem.i_am_the_listen) {
         _shm_close_listen(addr);
-        sem_close(addr->conn.shmem.locks.listen.available);
-        sem_close(addr->conn.shmem.locks.listen.free);
-        shm_unlink(SHM_LISTEN_ADDR);
+        //sem_close(addr->conn.shmem.locks.listen.available);
+        //sem_close(addr->conn.shmem.locks.listen.free);
+        //shm_unlink(SHM_LISTEN_ADDR);
         return 0;
     }
     GUARD(_shm_close(addr));
