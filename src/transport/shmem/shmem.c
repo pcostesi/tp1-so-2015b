@@ -12,7 +12,7 @@
 #include "transport.h"
 
 /* Dirty little secret - We're cheating here by using a msg-sized buffer */
-#define ZONE_SIZE (10)
+#define ZONE_SIZE (1024 * 2)
 #define SHM_SIZE (ZONE_SIZE * 2)
 #define SRV_BASE (0)
 #define CLI_BASE (ZONE_SIZE)
