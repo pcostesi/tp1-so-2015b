@@ -96,8 +96,7 @@ int transport_accept(struct transport_addr * listen, struct transport_addr *acce
 
 int transport_connect(struct transport_addr * addr)
 {
-	srand(time(NULL));
-	new_fifo_index = rand();
+	new_fifo_index = getpid();
 
 	struct flock lock;
 	memset (&lock, 0, sizeof(lock));
