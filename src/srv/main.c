@@ -9,7 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-static struct pid_list pids;
+static int cur_clients = 0;
+static struct pid_node nodes[50];
 static struct atc_conn serverConn;
 
 int main(int argc, char ** arcv)
@@ -26,12 +27,12 @@ void init_server(void){
     if (atc_init() == -1) {
         perror("Could not init");
         exit(-1);
-    };
+    }
 
     if (atc_listen(&serverConn) == -1) {
       perror("Could not listen");
       exit(-1); 
-    };
+    }
     
     init_signal_handlers();
 }
@@ -50,94 +51,62 @@ void init_signal_handlers(void){
 }
 
 void srv_sigchld_handler(int sig){
-    pid_t p;
+    pid_t pid;
     int status;
-    while ((p = waitpid(-1, &status, WNOHANG)) != -1){
-        struct pid_node *node = get_node_from_pid(p);
-        atc_close(node->conn);
-        free(node);
+    while ((pid = waitpid(-1, &status, WNOHANG)) != -1){
+        kill_client(pid);
     }
 }
 
 void srv_sigint_handler(int sig){
-    struct pid_node * next, *cur_node;
-    cur_node = next = pids.head;
-    while (next != NULL){
-        atc_close(cur_node->conn);
-        next = cur_node->next;
-        free(cur_node);
-        cur_node = next;
+    int i;
+    for(i = 0; i < cur_clients; i++){
+        atc_close(&nodes[i].conn);
     }        
+    exit(0);
 }
 
 void fork_client(struct atc_conn * conn){
 	pid_t child_pid = fork();
-    struct pid_node * node;
+    cur_clients++;
 	if (child_pid == 0){
         printf("Waiting for requests in pid %d ...\n", getpid());
 		listen_child_channels(conn);
 	}else{
-		node = (struct pid_node *) malloc(sizeof(struct pid_node));
-        node->pid = child_pid;
-        node->conn = conn;
-        node->next = NULL;
-		if (pids.head == NULL){
-			pids.head = pids.tail = node;
-		}else{
-			pids.tail->next = node;
-			pids.tail = node;
-		}
+        nodes[cur_clients].pid = child_pid;
+        nodes[cur_clients].conn = *conn;
 	}
-	return;
-}
-
-struct pid_node * get_node_from_pid(pid_t pid){
-    struct pid_node * cur_node = pids.head;
-    while(cur_node != NULL){
-        if (cur_node->pid == pid){
-            return cur_node;
-        }
-    }
-    return NULL;
 }
 
 void kill_client(pid_t pid){
-	struct pid_node *prev_node;
-	struct pid_node *cur_node = pids.head;
-	while(cur_node != NULL){
-		if (cur_node->pid == pid){
-            if (cur_node == pids.tail){
-                pids.tail = prev_node;
-            }
-            if (cur_node == pids.head){
-                pids.head = cur_node->next;
-            }
-            if (prev_node != NULL){
-                prev_node->next = cur_node->next;
-            }
-            printf("Killed pid %d ...\n", pid);
-			kill(pid, SIGTERM);
-            free(cur_node);
-			return;
-		}
-		prev_node = cur_node;
-		cur_node = cur_node->next;
-	}
-	return;
+    int i;
+    cur_clients--;
+	for(i = 0; i < cur_clients; i++){
+        int startMoving = 0;
+        if (nodes[i].pid == pid){
+            startMoving = 1;
+            atc_close(&nodes[i].conn);
+            continue;
+        }if (startMoving){
+            nodes[i-1].pid = nodes[i].pid;  
+            nodes[i-1].conn = nodes[i].conn;         
+        }
+    }
 }
 
 void listen_channels(void){
     struct atc_conn *childConn;
     int result;
 	while (1) {
-
-        childConn = malloc(sizeof(struct atc_conn));
-        result = atc_accept(&serverConn, childConn);
-        if (result == -1) {
-            puts("Could not accept connection.");
-            return;
+        if (cur_clients + 1 < MAX_CLIENTS){
+            childConn = &(nodes[cur_clients + 1].conn);
+            result = atc_accept(&serverConn, childConn);
+            if (result == -1) {
+                puts("Could not accept connection.");
+                return;
+            }
+            fork_client(childConn); 
         }
-        fork_client(childConn);
 	}
     return;
 }
