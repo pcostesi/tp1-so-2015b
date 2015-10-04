@@ -176,8 +176,8 @@ static int handle_planes_request(struct atc_conn * conn)
     struct atc_res * res;
     struct atc_plane planes[2];
     memset(planes, 0, sizeof(planes));
-    strncpy(planes[0].id, "HHD035", 3);
-    strncpy(planes[1].id, "ECT620", 3);
+    strncpy(planes[0].id, "HHD035", 6);
+    strncpy(planes[1].id, "ECT620", 6);
     planes[0].x = 1;
     planes[0].y = 1;
     planes[0].x = 100;
