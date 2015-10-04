@@ -32,7 +32,6 @@ int main(int argc, char ** argv)
         while (howmany --> 0) {
             printf("Benching: %d to go \n", howmany);
             client_fn();
-            sleep(1);
             puts("");
         }
         return 0;
@@ -72,17 +71,17 @@ int server_fn(void)
         printf("Serving client %d\n\n", ++served);
         switch (fork()) {
             case 0:
-                //atc_close(&server);
+                atc_close(&server);
                 puts("connected.");
                 while (atc_reply(&client, (atc_reply_handler) handle_server_response) != -1) {
                     puts("Sent.");
                 };
                 puts("Connection closed.");
-                return atc_close(&client);
+                atc_close(&client);
+                break;
 
             case -1:
                 perror("accept");
-                return -1;
 
             default:
                 atc_close(&client);
@@ -122,14 +121,18 @@ void request_airports(struct atc_conn * client)
 
 int client_fn(void)
 {
+    int count = 200;
     puts("Starting client.");
     if (atc_connect(&client) == -1) {
         perror("Failed to connect");
         return -1;
     }
     puts("Requesting");
-    request_planes(&client);
-    request_airports(&client);
+    while (count --> 0) {
+        printf("\nRequest cycle %d\n", count);
+        request_planes(&client);
+        request_airports(&client);
+    }
     puts("Ready.");
     client.req.type = atc_leave;
     atc_request(&client);

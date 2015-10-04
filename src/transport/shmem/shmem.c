@@ -11,8 +11,10 @@
 
 #include "transport.h"
 
+extern int errno;
+
 /* Dirty little secret - We're cheating here by using a msg-sized buffer */
-#define ZONE_SIZE (1024 * 2)
+#define ZONE_SIZE (32)
 #define SHM_SIZE (ZONE_SIZE * 2)
 #define SRV_BASE (0)
 #define CLI_BASE (ZONE_SIZE)
@@ -25,8 +27,9 @@
 #define SHM_CONNECT_FREE_SRV "/SHM_SOCK_%d_free_srv"
 #define SHM_CONNECT_AVAILABLE_CLI "/SHM_SOCK_%d_available_cli"
 #define SHM_CONNECT_FREE_CLI "/SHM_SOCK_%d_free_cli"
-#define GUARD(A)	do { if ((A) == -1) { assert((A) != -1); return -1; } } while(0)
-#define GUARD_SEM(A)	do { if ((A) == SEM_FAILED) { assert((A) != SEM_FAILED); return -1; } } while(0)
+#define OOPSIE fprintf(stderr, "\nInternal error %s at %s, line %d.\n", strerror(errno), __FILE__, __LINE__)
+#define GUARD(A)	do { if ((A) == -1) { OOPSIE; return -1; } } while(0)
+#define GUARD_SEM(A)	do { if ((A) == SEM_FAILED) { OOPSIE; return -1; } } while(0)
 
 static int _shm_open_listen(struct transport_addr * addr, int flag);
 static int _shm_close_listen(struct transport_addr * addr);
@@ -79,6 +82,8 @@ static int _shm_connect(struct transport_addr * addr)
 
     ptr = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (ptr == MAP_FAILED) {
+        OOPSIE;
+        shm_unlink(addrname);
         close(shm_fd);
         return -1;
     }
@@ -97,9 +102,10 @@ static int _shm_close(struct transport_addr * addr)
     char addrname[256] = {0};
 
     snprintf(addrname, sizeof(addrname), SHM_CONNECT_ADDR, addr->conn.shmem.port);
-    GUARD(close(addr->conn.shmem.fd));
-    GUARD(munmap(addr->conn.shmem.zone, SHM_SIZE));
-    GUARD(_shm_unlocks(addr));
+    close(addr->conn.shmem.fd);
+    munmap(addr->conn.shmem.zone, SHM_SIZE);
+    _shm_unlocks(addr);
+    shm_unlink(SHM_CONNECT_ADDR);
     addr->conn.shmem.zone = NULL;
     addr->conn.shmem.connected = 0;
     return 0;
@@ -243,10 +249,18 @@ int transport_listen(struct transport_addr * addr)
     addr->conn.shmem.i_am_the_server = 1;
     addr->conn.shmem.i_am_the_listen = 1;
 
+    shm_unlink(SHM_LISTEN_ADDR);
+
+    sem_unlink(SHM_LISTEN_AVAILABLE);
     addr->conn.shmem.locks.listen.available = sem_open(SHM_LISTEN_AVAILABLE, O_RDWR | O_CREAT, 0666, 0);
     GUARD_SEM(addr->conn.shmem.locks.listen.available);
+    while (sem_trywait(addr->conn.shmem.locks.listen.available) != -1);
+
+    sem_unlink(SHM_LISTEN_FREE);
     addr->conn.shmem.locks.listen.free = sem_open(SHM_LISTEN_FREE, O_RDWR | O_CREAT, 0666, 0);
     GUARD_SEM(addr->conn.shmem.locks.listen.free);
+    while (sem_trywait(addr->conn.shmem.locks.listen.free) != -1);
+
     GUARD(_shm_open_listen(addr, O_CREAT));
     addr->conn.shmem.connected = 1;
 
@@ -260,13 +274,12 @@ int transport_close(struct transport_addr * addr)
 
     if (addr->conn.shmem.i_am_the_listen) {
         _shm_close_listen(addr);
-        //sem_close(addr->conn.shmem.locks.listen.available);
-        //sem_close(addr->conn.shmem.locks.listen.free);
+        sem_close(addr->conn.shmem.locks.listen.available);
+        sem_close(addr->conn.shmem.locks.listen.free);
         //shm_unlink(SHM_LISTEN_ADDR);
         return 0;
     }
     GUARD(_shm_close(addr));
-
     return 0;
 }
 
@@ -284,10 +297,10 @@ int transport_accept(struct transport_addr * addr, struct transport_addr * worke
     memcpy(addr->conn.shmem.zone, &addr->conn.shmem.port, SHM_LISTEN_SIZE);
     worker->conn.shmem.port = addr->conn.shmem.port;
     addr->conn.shmem.port += 1;
+    GUARD(_shm_connect(worker));
     sem_post(addr->conn.shmem.locks.listen.available);
 
     sem_wait(addr->conn.shmem.locks.listen.free);
-    GUARD(_shm_connect(worker));
     return 1;
 }
 
