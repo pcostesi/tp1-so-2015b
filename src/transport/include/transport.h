@@ -1,9 +1,16 @@
 #ifndef __TRANSPORT_CONN
 #define __TRANSPORT_CONN 1
 
+#if defined(__APPLE__) && defined(__MACH__)
+#define NOQUEUE 1
+#endif
+
 #include <stddef.h>
 #include <sys/types.h>
+#ifndef NOQUEUE
 #include <mqueue.h>
+#endif
+#include <semaphore.h>
 
 enum transport_conn_type {
     transport_conn_socket,
@@ -18,10 +25,30 @@ struct transport_addr {
     union {
         int sockfd;
         int fifo_fd[2]; /*0 is in, 1 out*/
+#ifndef NOQUEUE
         mqd_t mqueue[2];
+#endif
         struct {
-            void * zone;
-            key_t key;
+            int i_am_the_server;
+            int i_am_the_listen;
+            int connected;
+            int fd;
+            int port;
+            char * zone;
+            size_t rd;
+            size_t wr;
+            union {
+                struct {
+                    sem_t * available;
+                    sem_t * free;
+                } listen;
+                struct {
+                    sem_t * available_srv;
+                    sem_t * available_cli;
+                    sem_t * free_srv;
+                    sem_t * free_cli;
+                } connection;
+            } locks;
         } shmem;
     } conn;
 };
