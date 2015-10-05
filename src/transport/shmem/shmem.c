@@ -139,19 +139,19 @@ static int _shm_unlocks(struct transport_addr * addr)
     char lock[256];
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_SRV, addr->conn.shmem.port);
-    GUARD(sem_close(addr->conn.shmem.locks.connection.available_srv));
+    (sem_close(addr->conn.shmem.locks.connection.available_srv));
     addr->conn.shmem.locks.connection.available_srv = NULL;
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_SRV, addr->conn.shmem.port);
-    GUARD(sem_close(addr->conn.shmem.locks.connection.free_srv));
+    (sem_close(addr->conn.shmem.locks.connection.free_srv));
     addr->conn.shmem.locks.connection.free_srv = NULL;
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_AVAILABLE_CLI, addr->conn.shmem.port);
-    GUARD(sem_close(addr->conn.shmem.locks.connection.available_cli));
+    (sem_close(addr->conn.shmem.locks.connection.available_cli));
     addr->conn.shmem.locks.connection.available_cli = NULL;
 
     snprintf(lock, sizeof(lock), SHM_CONNECT_FREE_CLI, addr->conn.shmem.port);
-    GUARD(sem_close(addr->conn.shmem.locks.connection.free_cli));
+    (sem_close(addr->conn.shmem.locks.connection.free_cli));
     addr->conn.shmem.locks.connection.free_cli = NULL;
 
     return 0;
@@ -177,7 +177,8 @@ int transport_send(struct transport_addr * addr, unsigned char * buffer, size_t 
         free = addr->conn.shmem.locks.connection.free_cli;
     }
 
-    while (bytes < size && sem_wait(free) != -1) {
+    while (bytes < size) {
+        GUARD(sem_wait(free));
         base_offset[addr->conn.shmem.wr] = buffer[bytes];
         addr->conn.shmem.wr = (addr->conn.shmem.wr + 1) % ZONE_SIZE;
         bytes += 1;
@@ -207,7 +208,8 @@ int transport_recv(struct transport_addr * addr, unsigned char * buffer, size_t 
         free = addr->conn.shmem.locks.connection.free_srv;
     }
 
-    while (bytes < size && sem_wait(available) != -1) {
+    while (bytes < size) {
+        GUARD(sem_wait(available));
         buffer[bytes] = base_offset[addr->conn.shmem.rd];
         addr->conn.shmem.rd = (addr->conn.shmem.rd + 1) % ZONE_SIZE;
         bytes += 1;
@@ -245,7 +247,7 @@ int transport_connect(struct transport_addr * addr)
 
 int transport_listen(struct transport_addr * addr)
 {
-    addr->conn.shmem.port = getpid();
+    addr->conn.shmem.port = 0;
     addr->conn.shmem.i_am_the_server = 1;
     addr->conn.shmem.i_am_the_listen = 1;
 
@@ -254,12 +256,10 @@ int transport_listen(struct transport_addr * addr)
     sem_unlink(SHM_LISTEN_AVAILABLE);
     addr->conn.shmem.locks.listen.available = sem_open(SHM_LISTEN_AVAILABLE, O_RDWR | O_CREAT, 0666, 0);
     GUARD_SEM(addr->conn.shmem.locks.listen.available);
-    while (sem_trywait(addr->conn.shmem.locks.listen.available) != -1);
 
     sem_unlink(SHM_LISTEN_FREE);
     addr->conn.shmem.locks.listen.free = sem_open(SHM_LISTEN_FREE, O_RDWR | O_CREAT, 0666, 0);
     GUARD_SEM(addr->conn.shmem.locks.listen.free);
-    while (sem_trywait(addr->conn.shmem.locks.listen.free) != -1);
 
     GUARD(_shm_open_listen(addr, O_CREAT));
     addr->conn.shmem.connected = 1;
@@ -276,7 +276,6 @@ int transport_close(struct transport_addr * addr)
         _shm_close_listen(addr);
         sem_close(addr->conn.shmem.locks.listen.available);
         sem_close(addr->conn.shmem.locks.listen.free);
-        //shm_unlink(SHM_LISTEN_ADDR);
         return 0;
     }
     GUARD(_shm_close(addr));

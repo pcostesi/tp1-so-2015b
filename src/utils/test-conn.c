@@ -121,7 +121,7 @@ void request_airports(struct atc_conn * client)
 
 int client_fn(void)
 {
-    int count = 200;
+    int count = 2;
     puts("Starting client.");
     if (atc_connect(&client) == -1) {
         perror("Failed to connect");
